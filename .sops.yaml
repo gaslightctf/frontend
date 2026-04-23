@@ -1,0 +1,13 @@
+creation_rules:
+- path_regex: secrets/deploy.yaml
+  key_groups:
+  - age:
+    # -- @sportshead
+    # v1.mbair.se
+    - age1tag1qw6cx6k7s34zt378mgwlmcy4jq4jdzgs4auuwlugyhx8td59wg96q8kyajc
+    # backup
+    - age1chacvhtf5y0vjvh7a762780t84846h8hl72wskjcr99a3qjylgxse30hdf
+
+    # https://garnix.io/api/keys/gaslightctf/frontend/actions/deploy/key.public
+    - age13hw3wlc4w9302p896vc6gjp7uxa7al3wjcls0t3dy458ce36ms2s60n7u3
+

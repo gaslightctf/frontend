@@ -2,7 +2,7 @@
   description = "Berg frontend";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/pull/508770/head";
     flake-parts.url = "github:hercules-ci/flake-parts";
 
     devshell.url = "github:numtide/devshell";
@@ -16,10 +16,12 @@
     extra-substituters = [
       "https://cache.nixos.org"
       "https://nix-community.cachix.org"
+      "https://cache.garnix.io"
     ];
     extra-trusted-public-keys = [
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
     ];
   };
 
@@ -37,7 +39,13 @@
       ];
 
       perSystem =
-        { pkgs, inputs', ... }:
+        {
+          pkgs,
+          inputs',
+          self',
+          lib,
+          ...
+        }:
         let
           bun2nix = inputs'.bun2nix.packages.default;
         in
@@ -52,6 +60,20 @@
                 package = bun2nix;
                 category = "bun";
               }
+
+              {
+                package = pkgs.wrangler;
+                category = "deploy";
+              }
+              {
+
+                package = pkgs.sops;
+                category = "secrets";
+              }
+              {
+                package = pkgs.age;
+                category = "secrets";
+              }
             ];
           };
 
@@ -59,7 +81,33 @@
             pname = "berg-frontend";
             version = "1.0.0";
 
-            src = ./.;
+            src = lib.cleanSourceWith {
+              filter = (
+                name: type:
+                type != "regular"
+                || !(builtins.elem (baseNameOf name) [
+                  "Dockerfile"
+                  "nginx.conf"
+
+                  "garnix.yaml"
+                  "flake.nix"
+                  "flake.lock"
+
+                  "README.md"
+                  "LICENSE"
+
+                  ".envrc"
+                  ".gitattributes"
+                  ".gitignore"
+                  ".sops.yaml"
+                  "deploy.yaml"
+                ])
+              );
+              src = lib.cleanSourceWith {
+                filter = lib.cleanSourceFilter;
+                src = ./.;
+              };
+            };
 
             nativeBuildInputs = [
               bun2nix.hook
@@ -74,6 +122,27 @@
             installPhase = ''
               cp -R ./dist/berg-frontend/browser/ $out
             '';
+          };
+
+          apps.deploy.program = pkgs.writeShellApplication {
+            name = "deploy";
+
+            text = ''
+              export SOPS_AGE_KEY_FILE="$GARNIX_ACTION_PRIVATE_KEY_FILE"
+
+              PROJECT_NAME=frontend-dev
+              if [ "$GARNIX_BRANCH" = "prod" ]; then
+                PROJECT_NAME=frontend
+              fi
+
+              sops exec-env "${./data/deploy.yaml}" \
+                "wrangler pages deploy '${self'.packages.default}' --project-name '$PROJECT_NAME'"
+            '';
+
+            runtimeInputs = [
+              pkgs.wrangler
+              pkgs.sops
+            ];
           };
         };
     };

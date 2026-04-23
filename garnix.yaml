@@ -1,0 +1,11 @@
+actions:
+  - on: push
+    run: deploy
+    withRepoContents: true
+
+builds:
+  - include:
+    - "packages.x86_64-linux.default"
+    - "devShell.x86_64-linux"
+    - "devShell.aarch64-darwin"
+
