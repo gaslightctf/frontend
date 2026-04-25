@@ -43,6 +43,7 @@ import {
 } from "../model";
 import { HelperService } from "./helper.service";
 import { Router } from "@angular/router";
+import { environment } from "@env/environment";
 
 @Injectable({
   providedIn: "root",
@@ -298,9 +299,8 @@ export class DataService {
 
   refreshWebSocket(accessToken: string | null) {
     this._webSocket?.complete();
-    let protocol = window.location.protocol == "https:" ? "wss" : "ws";
     this._webSocket = webSocket<WebSocketMessage<any>>({
-      url: protocol + "://" + window.location.host + "/api/events",
+      url: environment.wsEventsUrl,
       openObserver: {
         next: (_) => {
           let message: WebSocketMessage<string | null> = {
