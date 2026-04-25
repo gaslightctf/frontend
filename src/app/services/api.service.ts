@@ -1,5 +1,6 @@
 import { Injectable } from "@angular/core";
 import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { environment } from "@env/environment";
 import {
   Challenge,
   CurrentPlayer,
@@ -17,7 +18,7 @@ import { Observable } from "rxjs";
   providedIn: "root",
 })
 export class ApiService {
-  private baseUrl = window.location.origin;
+  private baseUrl = environment.apiBaseUrl;
 
   constructor(private http: HttpClient) {}
 

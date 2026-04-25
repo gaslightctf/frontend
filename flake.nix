@@ -124,19 +124,28 @@
             '';
           };
 
+          packages.prod = self'.packages.default.overrideAttrs {
+            pname = "berg-frontend-prod";
+            buildPhase = ''
+              bun run build:prod
+            '';
+          };
+
           apps.deploy.program = pkgs.writeShellApplication {
             name = "deploy";
 
             text = ''
               export SOPS_AGE_KEY_FILE="$GARNIX_ACTION_PRIVATE_KEY_FILE"
 
-              PROJECT_NAME=frontend-dev
+              PROJECT_NAME="frontend-dev"
+              RESULT="${self'.packages.default}"
               if [ "$GARNIX_BRANCH" = "prod" ]; then
-                PROJECT_NAME=frontend
+                PROJECT_NAME="frontend"
+                RESULT="${self'.packages.prod}"
               fi
 
               sops exec-env "${./data/deploy.yaml}" \
-                "wrangler pages deploy '${self'.packages.default}' --project-name '$PROJECT_NAME'"
+                "wrangler pages deploy '$RESULT' --project-name '$PROJECT_NAME'"
             '';
 
             runtimeInputs = [
