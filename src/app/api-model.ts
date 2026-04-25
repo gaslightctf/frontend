@@ -1,112 +1,112 @@
-export class Metadata {
-  public version = "";
-  public eventName = "";
-  public eventOrganiser = "";
-  public eventLogoUrl = "";
-  public start = "";
-  public end = "";
-  public allowAnonymousAccess = true;
-  public playerAttributes: PlayerAttribute[] = [];
-  public freezeStart: string | null = null;
-  public freezeEnd: string | null = null;
-  public teams = false;
-  public challengeMaximumValue = 0;
-  public challengeMinimumValue = 0;
-  public challengeSolvesBeforeMinimum = 0;
+export interface Metadata {
+  version: string;
+  eventName: string;
+  eventOrganiser: string;
+  eventLogoUrl: string;
+  start: string;
+  end: string;
+  allowAnonymousAccess: boolean;
+  playerAttributes: PlayerAttribute[];
+  freezeStart: string | null;
+  freezeEnd: string | null;
+  teams: boolean;
+  challengeMaximumValue: number;
+  challengeMinimumValue: number;
+  challengeSolvesBeforeMinimum: number;
 }
 
-export class PlayerAttribute {
-  public name = "";
-  public title = "";
-  public description = "";
-  public public = true;
-  public required = false;
-  public values: PlayerAttributeValue[] = [];
+export interface PlayerAttribute {
+  name: string;
+  title: string;
+  description: string;
+  public: boolean;
+  required: boolean;
+  values: PlayerAttributeValue[];
 }
 
-export class PlayerAttributeValue {
-  public value = "";
-  public title = "";
-  public description = "";
+export interface PlayerAttributeValue {
+  value: string;
+  title: string;
+  description: string;
 }
 
-export class Challenge {
-  public name = "";
-  public displayName = "";
-  public author = "";
-  public description = "";
-  public hideUntil: string | null = null;
-  public event: string = "";
-  public difficulty = "";
-  public flagFormat = "";
-  public hasRemote = false;
-  public categories: string[] = [];
-  public tags: string[] = [];
-  public attachments: Attachment[] = [];
+export interface Challenge {
+  name: string;
+  displayName: string;
+  author: string;
+  description: string;
+  hideUntil: string | null;
+  event: string;
+  difficulty: string;
+  flagFormat: string;
+  hasRemote: boolean;
+  categories: string[];
+  tags: string[];
+  attachments: Attachment[];
 }
 
-export class Attachment {
-  public fileName = "";
-  public downloadUrl = "";
+export interface Attachment {
+  fileName: string;
+  downloadUrl: string;
 }
 
-export class Service {
-  public name = "";
-  public hostname = "";
-  public port = 0;
-  public protocol = "";
-  public appProtocol = "";
-  public tls = false;
+export interface Service {
+  name: string;
+  hostname: string;
+  port: number;
+  protocol: string;
+  appProtocol: string;
+  tls: boolean;
 }
 
-export class Page {
-  public title = "";
-  public index = 0;
-  public path = "";
-  public content = "";
+export interface Page {
+  title: string;
+  index: number;
+  path: string;
+  content: string;
 }
 
-export class Player {
-  public id = "";
-  public name = "";
-  public attributes: Record<string, string> = {};
+export interface Player {
+  id: string;
+  name: string;
+  attributes: Record<string, string>;
 }
 
-export class CurrentPlayer {
-  public id = "";
-  public name = "";
-  public federatedId = "";
-  public apiKeyPlaceholder: string | null = null;
-  public roles: string[] = [];
-  public attributes: Record<string, string> = {};
+export interface CurrentPlayer {
+  id: string;
+  name: string;
+  federatedId: string;
+  apiKeyPlaceholder: string | null;
+  roles: string[];
+  attributes: Record<string, string>;
 }
 
-export class CurrentTeam {
-  public id = "";
-  public name = "";
-  public joinToken: string | null = "";
-  public players: string[] = [];
+export interface CurrentTeam {
+  id: string;
+  name: string;
+  joinToken: string | null;
+  players: string[];
 }
 
-export class Team {
-  public id = "";
-  public name = "";
-  public players: string[] = [];
+export interface Team {
+  id: string;
+  name: string;
+  players: string[];
 }
 
-export class Instance {
-  public id = "";
-  public playerId = "";
-  public name = "";
-  public timeout = "";
-  public status: ChallengeInstanceState = ChallengeInstanceState.None;
-  public services: Service[] = [];
+export interface Instance {
+  id: string;
+  playerId: string;
+  name: string;
+  timeout: string;
+  status: ChallengeInstanceState;
+  services: Service[];
 }
 
-export class Solve {
-  public playerId = "";
-  public solvedAt = "";
-  public challengeName = "";
+export interface Solve {
+  playerId: string;
+  solvedAt: string;
+  challengeName: string;
 }
 
 export enum ChallengeInstanceState {
@@ -121,10 +121,10 @@ export interface WebSocketMessage<T> {
   message: T;
 }
 
-export class ProblemDetails {
-  public type = "";
-  public title = "";
-  public status = 0;
-  public detail = "";
-  public instance = "";
+export interface ProblemDetails {
+  type: string;
+  title: string;
+  status: number;
+  detail: string;
+  instance: string;
 }

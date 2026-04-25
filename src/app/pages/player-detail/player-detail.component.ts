@@ -20,7 +20,7 @@ export class PlayerDetailComponent implements OnInit, OnDestroy {
 
   playerDetail: PlayerDetail | null = null;
   areTeamsEnabled = false;
-  metadata = new Metadata();
+  metadata: Metadata | null = null;
 
   constructor(
     public dataService: DataService,
@@ -55,13 +55,13 @@ export class PlayerDetailComponent implements OnInit, OnDestroy {
 
   getAttributeTitle(name: string) {
     return (
-      this.metadata.playerAttributes.find((a) => a.name == name)?.title ?? name
+      this.metadata?.playerAttributes.find((a) => a.name == name)?.title ?? name
     );
   }
 
   getAttributeValueTitle(name: string, value: string) {
     return (
-      this.metadata.playerAttributes
+      this.metadata?.playerAttributes
         .find((a) => a.name == name)
         ?.values.find((v) => v.value == value)?.title ?? value
     );

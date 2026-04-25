@@ -33,15 +33,12 @@ export class PlayerAttributesComponent implements OnInit, OnDestroy {
       let currentPlayerAttributes: CurrentPlayerAttribute[] = [];
       let hasMissingRequiredAttributes = false;
       requiredAttributes.forEach((a) => {
-        let attr = new CurrentPlayerAttribute();
+        const attr: CurrentPlayerAttribute = { attr: a, selectedValue: null };
         attr.attr = a;
         if (playerAttributes.has(a.name)) {
           attr.selectedValue = currentPlayer.attributes[a.name];
-        } else {
-          attr.selectedValue = null;
-          if (a.required) {
-            hasMissingRequiredAttributes = true;
-          }
+        } else if (a.required) {
+          hasMissingRequiredAttributes = true;
         }
         currentPlayerAttributes.push(attr);
       });
@@ -64,7 +61,7 @@ export class PlayerAttributesComponent implements OnInit, OnDestroy {
   }
 }
 
-class CurrentPlayerAttribute {
-  public attr: PlayerAttribute = new PlayerAttribute();
-  public selectedValue: string | null = null;
+interface CurrentPlayerAttribute {
+  attr: PlayerAttribute;
+  selectedValue: string | null;
 }

@@ -1,82 +1,82 @@
 import { Challenge, Player, Team } from "./api-model";
 
-export class PlayerDetail {
-  public id: string = "";
-  public name: string = "";
-  public attributes: Record<string, string> = {};
-  public team: Team | null = null;
-  public score: number = 0;
-  public solves: SolveDetail[] = [];
-  public categoryProgress: Map<string, number> = new Map();
+export interface PlayerDetail {
+  id: string;
+  name: string;
+  attributes: Record<string, string>;
+  team: Team | null;
+  score: number;
+  solves: SolveDetail[];
+  categoryProgress: Map<string, number>;
 }
 
-export class TeamDetail {
-  public id: string = "";
-  public name: string = "";
-  public players: Player[] = [];
-  public score: number = 0;
-  public solves: TeamSolveDetail[] = [];
-  public categoryProgress: Map<string, number> = new Map();
+export interface TeamDetail {
+  id: string;
+  name: string;
+  players: Player[];
+  score: number;
+  solves: TeamSolveDetail[];
+  categoryProgress: Map<string, number>;
 }
 
-export class ChallengeDetail {
-  public challenge: Challenge = new Challenge();
-  public playerSolves: SolveDetail[] = [];
-  public teamSolves: TeamSolveDetail[] = [];
-  public solvedByPlayer: boolean = false;
-  public solvedByTeam: boolean = false;
-  public value: number = 0;
+export interface ChallengeDetail {
+  challenge: Challenge;
+  playerSolves: SolveDetail[];
+  teamSolves: TeamSolveDetail[];
+  solvedByPlayer: boolean;
+  solvedByTeam: boolean;
+  value: number;
 }
 
-export class ChallengeDetailCategory {
-  public category: string = "";
-  public challenges: ChallengeDetail[] = [];
-  public numSolved: number = 0;
-  public numTotal: number = 0;
+export interface ChallengeDetailCategory {
+  category: string;
+  challenges: ChallengeDetail[];
+  numSolved: number;
+  numTotal: number;
 }
 
-export class SolveDetail {
-  public playerId: string = "";
-  public solvedAt: Date = new Date();
-  public challengeName: string = "";
-  public challengeDisplayName: string = "";
-  public playerName: string = "";
-  public teamId: string | null = null;
-  public teamName: string | null = null;
+export interface SolveDetail {
+  playerId: string;
+  solvedAt: Date;
+  challengeName: string;
+  challengeDisplayName: string;
+  playerName: string;
+  teamId: string | null;
+  teamName: string | null;
 }
 
-export class TeamSolveDetail {
-  public solvedAt: Date = new Date();
-  public challengeName: string = "";
-  public challengeDisplayName: string = "";
-  public players: Player[] = [];
-  public teamId: string = "";
-  public teamName: string | null = null;
+export interface TeamSolveDetail {
+  solvedAt: Date;
+  challengeName: string;
+  challengeDisplayName: string;
+  players: Player[];
+  teamId: string;
+  teamName: string | null;
 }
 
-export class ScoreboardRanking {
-  public lastSolveAt: Date | null = null;
-  public name: string = "";
-  public id: string = "";
-  public score: number = 0;
-  public rank: number = 0;
-  public challengesByCategory: ScoreboardChallengeByCategory[] = [];
+export interface ScoreboardRanking {
+  lastSolveAt: Date | null;
+  name: string;
+  id: string;
+  score: number;
+  rank: number;
+  challengesByCategory: ScoreboardChallengeByCategory[];
 }
 
-export class ScoreboardChallengeByCategory {
-  public category: string = "";
-  public scoreboardChallengeEntries: ScoreboardChallengeEntry[] = [];
-  public numSolved: number = 0;
-  public numTotal: number = 0;
+export interface ScoreboardChallengeByCategory {
+  category: string;
+  scoreboardChallengeEntries: ScoreboardChallengeEntry[];
+  numSolved: number;
+  numTotal: number;
 }
 
-export class ScoreboardChallengeEntry {
-  public challenge: Challenge = new Challenge();
-  public solved: boolean = false;
-  public solvedAt: Date | null = null;
+export interface ScoreboardChallengeEntry {
+  challenge: Challenge;
+  solved: boolean;
+  solvedAt: Date | null;
 }
 
-export class ActivityEntry {
-  public challenge: ChallengeDetail | null = null;
-  public solve: SolveDetail = new SolveDetail();
+export interface ActivityEntry {
+  challenge: ChallengeDetail | null;
+  solve: SolveDetail;
 }

@@ -33,7 +33,7 @@ import {
   ChallengeDetail,
   ChallengeDetailCategory,
   PlayerDetail,
-  ScoreboardChallengeByCategory as ScoreboardChallengesByCategory,
+  ScoreboardChallengeByCategory,
   ScoreboardChallengeEntry,
   ScoreboardRanking,
   SolveDetail,
@@ -59,7 +59,7 @@ export class DataService {
   private _solves = new ReplaySubject<readonly Solve[]>(1);
   private _pages = new BehaviorSubject<readonly Page[]>([]);
   private _metadata = new ReplaySubject<Metadata>(1);
-  private _instance = new BehaviorSubject<Instance>(new Instance());
+  private _instance = new BehaviorSubject<Instance | null>(null);
   private _hasCTFStarted = new BehaviorSubject<boolean>(false);
   private _hasCTFEnded = new BehaviorSubject<boolean>(false);
   private _hasFreezeStarted = new BehaviorSubject<boolean>(false);
@@ -94,7 +94,7 @@ export class DataService {
     this._currentPlayerId.asObservable();
   public readonly currentTeamJoinToken: Observable<string | null> =
     this._currentTeamJoinToken.asObservable().pipe(distinctUntilChanged());
-  public readonly instance: Observable<Instance> =
+  public readonly instance: Observable<Instance | null> =
     this._instance.asObservable();
   public readonly metadata: Observable<Metadata> =
     this._metadata.asObservable();
@@ -599,15 +599,13 @@ export class DataService {
     ]).pipe(
       map((params) => {
         const [solveDetails, challengeDetails] = params;
-        var entries = solveDetails.map((solveDetail) => {
-          var entry = new ActivityEntry();
-          entry.solve = solveDetail;
-          entry.challenge =
+        var entries = solveDetails.map((solveDetail) => ({
+          solve: solveDetail,
+          challenge:
             challengeDetails.find(
               (c) => c.challenge.name == solveDetail.challengeName,
-            ) || null;
-          return entry;
-        });
+            ) || null,
+        }));
         entries.sort(
           (a, b) => b.solve.solvedAt.getTime() - a.solve.solvedAt.getTime(),
         );
@@ -646,14 +644,14 @@ export class DataService {
             (c) => this.getPrimaryCategory(c.challenge) == category,
           );
           challs.sort((a, b) => this.compareChallengeDetails(a, b));
-          let challengeDetailCategory = new ChallengeDetailCategory();
-          challengeDetailCategory.category = category;
-          challengeDetailCategory.challenges = challs;
-          challengeDetailCategory.numTotal = challs.length;
-          challengeDetailCategory.numSolved = challs.filter(
-            (c) => c.solvedByPlayer || (metadata.teams && c.solvedByTeam),
-          ).length;
-          result.push(challengeDetailCategory);
+          result.push({
+            category,
+            challenges: challs,
+            numTotal: challs.length,
+            numSolved: challs.filter(
+              (c) => c.solvedByPlayer || (metadata.teams && c.solvedByTeam),
+            ).length,
+          });
         }
         return Object.freeze(result);
       }),
@@ -794,93 +792,63 @@ export class DataService {
       var scoreboard: ScoreboardRanking[] = [];
       var challenges = challengesDetails.map((c) => c.challenge);
       var primaryCategories = this.getPrimaryCategories(challenges);
+      const toRankingCategories = (
+        solves: readonly { challengeName: string; solvedAt: Date }[],
+      ): ScoreboardChallengeByCategory[] =>
+        primaryCategories.map((category) => {
+          const challs = challengesDetails
+            .filter((c) => this.getPrimaryCategory(c.challenge) == category)
+            .sort((a, b) => this.compareChallengeDetails(a, b));
+          const scoreboardChallengeEntries: ScoreboardChallengeEntry[] =
+            challs.map((c) => {
+              const solvedAt =
+                solves.find((s) => s.challengeName == c.challenge.name)
+                  ?.solvedAt || null;
+              return { challenge: c.challenge, solvedAt, solved: solvedAt != null };
+            });
+          return {
+            category,
+            scoreboardChallengeEntries,
+            numSolved: scoreboardChallengeEntries.filter((c) => c.solved).length,
+            numTotal: scoreboardChallengeEntries.length,
+          };
+        });
+
       if (metadata.teams) {
-        for (let team of teams) {
-          var ranking = new ScoreboardRanking();
-          ranking.id = team.id;
-          ranking.name = team.name;
-          ranking.score = team.score;
-          for (let category of primaryCategories) {
-            let challs = challengesDetails.filter(
-              (c) => this.getPrimaryCategory(c.challenge) == category,
-            );
-            challs.sort((a, b) => this.compareChallengeDetails(a, b));
-            var challengesByCategory = new ScoreboardChallengesByCategory();
-            challengesByCategory.category = category;
-            challengesByCategory.scoreboardChallengeEntries = challs.map(
-              (c) => {
-                var entry = new ScoreboardChallengeEntry();
-                entry.challenge = c.challenge;
-                entry.solvedAt =
-                  team.solves.find(
-                    (s) => s.challengeName == entry.challenge.name,
-                  )?.solvedAt || null;
-                entry.solved = entry.solvedAt != null;
-                return entry;
-              },
-            );
-            challengesByCategory.numSolved =
-              challengesByCategory.scoreboardChallengeEntries.filter(
-                (c) => c.solved,
-              ).length;
-            challengesByCategory.numTotal =
-              challengesByCategory.scoreboardChallengeEntries.length;
-            ranking.challengesByCategory.push(challengesByCategory);
-          }
-          if (team.solves.length > 0) {
-            ranking.lastSolveAt = team.solves
-              .map((s) => s.solvedAt)
-              .reduce((a, b) => (a > b ? a : b));
-          }
+        for (const team of teams) {
+          const ranking: ScoreboardRanking = {
+            id: team.id,
+            name: team.name,
+            score: team.score,
+            rank: 0,
+            lastSolveAt:
+              team.solves.length > 0
+                ? team.solves.map((s) => s.solvedAt).reduce((a, b) => (a > b ? a : b))
+                : null,
+            challengesByCategory: toRankingCategories(team.solves),
+          };
           scoreboard.push(ranking);
         }
       } else {
-        for (let player of players) {
-          var ranking = new ScoreboardRanking();
-          ranking.id = player.id;
-          ranking.name = player.name;
-          ranking.score = player.score;
-          for (let category of primaryCategories) {
-            let challs = challengesDetails.filter(
-              (c) => this.getPrimaryCategory(c.challenge) == category,
-            );
-            challs.sort((a, b) => this.compareChallengeDetails(a, b));
-            var challengesByCategory = new ScoreboardChallengesByCategory();
-            challengesByCategory.category = category;
-            challengesByCategory.scoreboardChallengeEntries = challs.map(
-              (c) => {
-                var entry = new ScoreboardChallengeEntry();
-                entry.challenge = c.challenge;
-                entry.solvedAt =
-                  player.solves.find(
-                    (s) => s.challengeName == entry.challenge.name,
-                  )?.solvedAt || null;
-                entry.solved = entry.solvedAt != null;
-                return entry;
-              },
-            );
-            challengesByCategory.numSolved =
-              challengesByCategory.scoreboardChallengeEntries.filter(
-                (c) => c.solved,
-              ).length;
-            challengesByCategory.numTotal =
-              challengesByCategory.scoreboardChallengeEntries.length;
-            ranking.challengesByCategory.push(challengesByCategory);
-          }
-          if (player.solves.length > 0) {
-            ranking.lastSolveAt = player.solves
-              .map((c) => c.solvedAt)
-              .reduce((a, b) => (a > b ? a : b));
-          }
+        for (const player of players) {
+          const ranking: ScoreboardRanking = {
+            id: player.id,
+            name: player.name,
+            score: player.score,
+            rank: 0,
+            lastSolveAt:
+              player.solves.length > 0
+                ? player.solves.map((c) => c.solvedAt).reduce((a, b) => (a > b ? a : b))
+                : null,
+            challengesByCategory: toRankingCategories(player.solves),
+          };
           scoreboard.push(ranking);
         }
       }
       scoreboard.sort((a, b) => this.compareScoreboardRanking(a, b));
-      var i = 1;
-      for (let ranking of scoreboard) {
-        ranking.rank = i;
-        i += 1;
-      }
+      scoreboard.forEach((ranking, i) => {
+        ranking.rank = i + 1;
+      });
       return Object.freeze(scoreboard);
     }),
     shareReplay(1),
@@ -896,13 +864,7 @@ export class DataService {
     solves: readonly Solve[],
     challenges: readonly ChallengeDetail[],
   ): PlayerDetail {
-    var playerDetail = new PlayerDetail();
-    playerDetail.id = player.id;
-    playerDetail.name = player.name;
-    playerDetail.attributes = player.attributes;
-    playerDetail.team =
-      teams.find((t) => t.players.includes(player.id)) || null;
-    playerDetail.solves = solves
+    const playerSolves = solves
       .filter((s) => s.playerId == player.id)
       .map((s) =>
         this.toSolveDetail(
@@ -912,28 +874,31 @@ export class DataService {
           players,
           teams,
         ),
-      );
-    playerDetail.solves.sort(
-      (a, b) => b.solvedAt.getTime() - a.solvedAt.getTime(),
-    );
-    let solvedChallengeNames = playerDetail.solves.map((s) => s.challengeName);
-    playerDetail.score = challenges
+      )
+      .sort((a, b) => b.solvedAt.getTime() - a.solvedAt.getTime());
+    const solvedChallengeNames = playerSolves.map((s) => s.challengeName);
+    const score = challenges
       .filter((c) => solvedChallengeNames.includes(c.challenge.name))
       .map((c) => c.value)
       .reduce((a, b) => a + b, 0);
-    let plainChallenges = challenges.map((c) => c.challenge);
-    let categories = this.getPrimaryCategories(plainChallenges);
-    for (let category of categories) {
-      playerDetail.categoryProgress.set(
+    const plainChallenges = challenges.map((c) => c.challenge);
+    const categories = this.getPrimaryCategories(plainChallenges);
+    const categoryProgress = new Map<string, number>();
+    for (const category of categories) {
+      categoryProgress.set(
         category,
-        this.getCategoryProgress(
-          category,
-          plainChallenges,
-          playerDetail.solves.map((s) => s.challengeName),
-        ),
+        this.getCategoryProgress(category, plainChallenges, solvedChallengeNames),
       );
     }
-    return Object.freeze(playerDetail);
+    return Object.freeze({
+      id: player.id,
+      name: player.name,
+      attributes: player.attributes,
+      team: teams.find((t) => t.players.includes(player.id)) || null,
+      solves: playerSolves,
+      score,
+      categoryProgress,
+    });
   }
 
   private toTeamDetail(
@@ -942,38 +907,40 @@ export class DataService {
     solves: readonly Solve[],
     challenges: readonly ChallengeDetail[],
   ): TeamDetail {
-    var teamDetail = new TeamDetail();
-    teamDetail.id = team.id;
-    teamDetail.name = team.name;
-    teamDetail.players = players.filter((p) => team!.players.includes(p.id));
-    let solvedChallengeNames = solves
-      .filter((s) => team!.players.includes(s.playerId))
+    const solvedChallengeNames = solves
+      .filter((s) => team.players.includes(s.playerId))
       .map((s) => s.challengeName);
-    let solvedChallengeDetails = challenges.filter((c) =>
+    const solvedChallengeDetails = challenges.filter((c) =>
       solvedChallengeNames.includes(c.challenge.name),
     );
-    teamDetail.solves = solvedChallengeDetails
+    const teamSolves = solvedChallengeDetails
       .flatMap((c) => c.teamSolves)
-      .filter((s) => s.teamId == team.id);
-    teamDetail.solves.sort(
-      (a, b) => b.solvedAt.getTime() - a.solvedAt.getTime(),
-    );
-    teamDetail.score = solvedChallengeDetails
+      .filter((s) => s.teamId == team.id)
+      .sort((a, b) => b.solvedAt.getTime() - a.solvedAt.getTime());
+    const score = solvedChallengeDetails
       .map((c) => c.value)
       .reduce((a, b) => a + b, 0);
-    let plainChallenges = challenges.map((c) => c.challenge);
-    let categories = this.getPrimaryCategories(plainChallenges);
-    for (let category of categories) {
-      teamDetail.categoryProgress.set(
+    const plainChallenges = challenges.map((c) => c.challenge);
+    const categories = this.getPrimaryCategories(plainChallenges);
+    const categoryProgress = new Map<string, number>();
+    for (const category of categories) {
+      categoryProgress.set(
         category,
         this.getCategoryProgress(
           category,
           plainChallenges,
-          teamDetail.solves.map((s) => s.challengeName),
+          teamSolves.map((s) => s.challengeName),
         ),
       );
     }
-    return Object.freeze(teamDetail);
+    return Object.freeze({
+      id: team.id,
+      name: team.name,
+      players: players.filter((p) => team.players.includes(p.id)),
+      solves: teamSolves,
+      score,
+      categoryProgress,
+    });
   }
 
   private toChallengeDetail(
@@ -984,53 +951,49 @@ export class DataService {
     players: readonly Player[],
     teams: readonly Team[],
   ) {
-    var challDetail = new ChallengeDetail();
-    challDetail.challenge = challenge;
-    challDetail.playerSolves = solves
+    const playerSolves = solves
       .filter((s) => s.challengeName == challenge.name)
-      .map((s) => this.toSolveDetail(s, challenge, players, teams));
-    challDetail.playerSolves.sort(
-      (a, b) => b.solvedAt.getTime() - a.solvedAt.getTime(),
-    );
-    var solvedPlayerIds = challDetail.playerSolves.map((s) => s.playerId);
-    var teamsWithSolves = teams.filter((t) =>
-      t.players.some((p) => solvedPlayerIds.includes(p)),
-    );
-    challDetail.teamSolves = teamsWithSolves.map((t) =>
-      this.toTeamSolveDetail(t, challenge, solves, players),
-    );
-    challDetail.teamSolves.sort(
-      (a, b) => b.solvedAt.getTime() - a.solvedAt.getTime(),
-    );
+      .map((s) => this.toSolveDetail(s, challenge, players, teams))
+      .sort((a, b) => b.solvedAt.getTime() - a.solvedAt.getTime());
+    const solvedPlayerIds = playerSolves.map((s) => s.playerId);
+    const teamSolves = teams
+      .filter((t) => t.players.some((p) => solvedPlayerIds.includes(p)))
+      .map((t) => this.toTeamSolveDetail(t, challenge, solves, players))
+      .sort((a, b) => b.solvedAt.getTime() - a.solvedAt.getTime());
 
-    let max = metadata.challengeMaximumValue;
-    let min = metadata.challengeMinimumValue;
-    let decay = metadata.challengeSolvesBeforeMinimum;
-    let numSolves = metadata.teams
-      ? challDetail.teamSolves.length
-      : challDetail.playerSolves.length;
-    challDetail.value = Math.max(
+    const max = metadata.challengeMaximumValue;
+    const min = metadata.challengeMinimumValue;
+    const decay = metadata.challengeSolvesBeforeMinimum;
+    const numSolves = metadata.teams ? teamSolves.length : playerSolves.length;
+    const value = Math.max(
       min,
       Math.ceil(
         ((min - max) / (decay * decay)) * (numSolves * numSolves) + max,
       ),
     );
 
+    let solvedByPlayer = false;
+    let solvedByTeam = false;
     if (currentPlayerId) {
-      challDetail.solvedByPlayer =
+      solvedByPlayer =
         solves.find(
           (s) =>
             s.challengeName == challenge.name && s.playerId == currentPlayerId,
         ) != undefined;
-      var team = teams.find((t) => t.players.includes(currentPlayerId)) || null;
-      if (team == null) {
-        challDetail.solvedByTeam = false;
-      } else {
-        challDetail.solvedByTeam =
-          challDetail.teamSolves.find((t) => t.teamId == team!.id) != undefined;
-      }
+      const team =
+        teams.find((t) => t.players.includes(currentPlayerId)) || null;
+      solvedByTeam =
+        team != null &&
+        teamSolves.find((t) => t.teamId == team.id) != undefined;
     }
-    return Object.freeze(challDetail);
+    return Object.freeze({
+      challenge,
+      playerSolves,
+      teamSolves,
+      value,
+      solvedByPlayer,
+      solvedByTeam,
+    });
   }
 
   private toTeamSolveDetail(
@@ -1039,22 +1002,24 @@ export class DataService {
     solves: readonly Solve[],
     players: readonly Player[],
   ): TeamSolveDetail {
-    var teamSolveDetail = new TeamSolveDetail();
-    teamSolveDetail.challengeName = challenge.name;
-    teamSolveDetail.challengeDisplayName = challenge.displayName;
-    teamSolveDetail.teamId = team.id;
-    teamSolveDetail.teamName = team.name;
-    let teamChallengeSolves = solves.filter(
-      (s) =>
-        s.challengeName == challenge.name && team.players.includes(s.playerId),
-    );
-    teamChallengeSolves.sort(
-      (a, b) => new Date(a.solvedAt).getTime() - new Date(b.solvedAt).getTime(),
-    );
-    teamSolveDetail.solvedAt = new Date(teamChallengeSolves[0].solvedAt);
-    let playerIds = teamChallengeSolves.map((s) => s.playerId);
-    teamSolveDetail.players = players.filter((p) => playerIds.includes(p.id));
-    return Object.freeze(teamSolveDetail);
+    const teamChallengeSolves = solves
+      .filter(
+        (s) =>
+          s.challengeName == challenge.name && team.players.includes(s.playerId),
+      )
+      .sort(
+        (a, b) =>
+          new Date(a.solvedAt).getTime() - new Date(b.solvedAt).getTime(),
+      );
+    const playerIds = teamChallengeSolves.map((s) => s.playerId);
+    return Object.freeze({
+      challengeName: challenge.name,
+      challengeDisplayName: challenge.displayName,
+      teamId: team.id,
+      teamName: team.name,
+      solvedAt: new Date(teamChallengeSolves[0].solvedAt),
+      players: players.filter((p) => playerIds.includes(p.id)),
+    });
   }
 
   private toSolveDetail(
@@ -1063,18 +1028,16 @@ export class DataService {
     players: readonly Player[],
     teams: readonly Team[],
   ): SolveDetail {
-    var solveDetail = new SolveDetail();
-    solveDetail.challengeName = solve.challengeName;
-    solveDetail.challengeDisplayName =
-      challenge?.displayName ?? solve.challengeName;
-    solveDetail.playerId = solve.playerId;
-    solveDetail.solvedAt = new Date(solve.solvedAt);
-    solveDetail.playerName =
-      players.find((p) => p.id == solve.playerId)?.name ?? "";
-    var team = teams.find((t) => t.players.includes(solve.playerId)) || null;
-    solveDetail.teamId = team?.id || null;
-    solveDetail.teamName = team?.name || null;
-    return Object.freeze(solveDetail);
+    const team = teams.find((t) => t.players.includes(solve.playerId)) || null;
+    return Object.freeze({
+      challengeName: solve.challengeName,
+      challengeDisplayName: challenge?.displayName ?? solve.challengeName,
+      playerId: solve.playerId,
+      solvedAt: new Date(solve.solvedAt),
+      playerName: players.find((p) => p.id == solve.playerId)?.name ?? "",
+      teamId: team?.id || null,
+      teamName: team?.name || null,
+    });
   }
 
   private compareChallengeDetails(
