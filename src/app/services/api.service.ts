@@ -91,10 +91,7 @@ export class ApiService {
   /* Page */
 
   getPages(): Observable<Page[]> {
-    return this.http.get<Page[]>(
-      this.baseUrl + "/api/pages",
-      this.httpOptions,
-    );
+    return this.http.get<Page[]>(this.baseUrl + "/api/pages", this.httpOptions);
   }
 
   /* Player */
@@ -150,7 +147,10 @@ export class ApiService {
   /* Solve */
 
   getSolves(): Observable<Solve[]> {
-    return this.http.get<Solve[]>(this.baseUrl+'/api/solves', this.httpOptions);
+    return this.http.get<Solve[]>(
+      this.baseUrl + "/api/solves",
+      this.httpOptions,
+    );
   }
 
   addSolve(challenge: string, flag: string): Observable<void> {
@@ -158,35 +158,53 @@ export class ApiService {
       challenge: challenge,
       flag: flag,
     };
-    return this.http.post<void>(this.baseUrl+'/api/solves', data, this.httpOptions);
+    return this.http.post<void>(
+      this.baseUrl + "/api/solves",
+      data,
+      this.httpOptions,
+    );
   }
 
   /* Team */
 
   getTeams(): Observable<Team[]> {
-    return this.http.get<Team[]>(this.baseUrl+'/api/teams', this.httpOptions);
+    return this.http.get<Team[]>(this.baseUrl + "/api/teams", this.httpOptions);
   }
 
   getCurrentTeam(): Observable<CurrentTeam> {
-    return this.http.get<CurrentTeam>(this.baseUrl+'/api/teams/current', this.httpOptions);
+    return this.http.get<CurrentTeam>(
+      this.baseUrl + "/api/teams/current",
+      this.httpOptions,
+    );
   }
 
   leaveCurrentTeam(): Observable<void> {
-    return this.http.delete<void>(this.baseUrl+'/api/teams/current', this.httpOptions);
+    return this.http.delete<void>(
+      this.baseUrl + "/api/teams/current",
+      this.httpOptions,
+    );
   }
 
   createTeam(name: string): Observable<void> {
     let data = {
       name: name,
     };
-    return this.http.post<void>(this.baseUrl+'/api/teams/create', data, this.httpOptions);
+    return this.http.post<void>(
+      this.baseUrl + "/api/teams/create",
+      data,
+      this.httpOptions,
+    );
   }
 
   joinTeam(joinToken: string): Observable<CurrentTeam> {
     let data = {
       joinToken: joinToken,
     };
-    return this.http.post<CurrentTeam>(this.baseUrl+'/api/teams/join', data, this.httpOptions);
+    return this.http.post<CurrentTeam>(
+      this.baseUrl + "/api/teams/join",
+      data,
+      this.httpOptions,
+    );
   }
 
   downloadFile(relativeUrl: string): Observable<Blob> {

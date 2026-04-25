@@ -74,6 +74,11 @@
                 package = pkgs.age;
                 category = "secrets";
               }
+
+              {
+                package = pkgs.biome;
+                category = "format";
+              }
             ];
           };
 
@@ -151,6 +156,18 @@
             runtimeInputs = [
               pkgs.wrangler
               pkgs.sops
+            ];
+          };
+
+          checks.biome = pkgs.writeShellApplication {
+            name = "biome";
+
+            text = ''
+              biome format
+            '';
+
+            runtimeInputs = [
+              pkgs.biome
             ];
           };
         };

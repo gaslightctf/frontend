@@ -24,16 +24,10 @@
               "base": "dist/berg-frontend"
             },
             "index": "src/index.html",
-            "polyfills": [
-              "zone.js",
-              "@angular/localize/init"
-            ],
+            "polyfills": ["zone.js", "@angular/localize/init"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "less",
-            "assets": [
-              "src/favicon.ico",
-              "src/assets"
-            ],
+            "assets": ["src/favicon.ico", "src/assets"],
             "styles": [
               "src/styles.less",
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
@@ -64,7 +58,7 @@
               ],
               "outputHashing": "all"
             },
-            "development": { }
+            "development": {}
           },
           "defaultConfiguration": "production"
         },

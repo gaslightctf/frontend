@@ -515,17 +515,17 @@ export class DataService {
 
   downloadFile(relativeUrl: string, filename: string) {
     if (this.isAuthenticated) {
-      this.oidcSecurityService.getAccessToken().subscribe(token => {
+      this.oidcSecurityService.getAccessToken().subscribe((token) => {
         const a = document.createElement("a");
         a.href = relativeUrl + "?access_token=" + token;
         a.download = filename;
         a.click();
       });
     } else {
-        const a = document.createElement("a");
-        a.href = relativeUrl;
-        a.download = filename;
-        a.click();
+      const a = document.createElement("a");
+      a.href = relativeUrl;
+      a.download = filename;
+      a.click();
     }
   }
 
@@ -804,12 +804,17 @@ export class DataService {
               const solvedAt =
                 solves.find((s) => s.challengeName == c.challenge.name)
                   ?.solvedAt || null;
-              return { challenge: c.challenge, solvedAt, solved: solvedAt != null };
+              return {
+                challenge: c.challenge,
+                solvedAt,
+                solved: solvedAt != null,
+              };
             });
           return {
             category,
             scoreboardChallengeEntries,
-            numSolved: scoreboardChallengeEntries.filter((c) => c.solved).length,
+            numSolved: scoreboardChallengeEntries.filter((c) => c.solved)
+              .length,
             numTotal: scoreboardChallengeEntries.length,
           };
         });
@@ -823,7 +828,9 @@ export class DataService {
             rank: 0,
             lastSolveAt:
               team.solves.length > 0
-                ? team.solves.map((s) => s.solvedAt).reduce((a, b) => (a > b ? a : b))
+                ? team.solves
+                    .map((s) => s.solvedAt)
+                    .reduce((a, b) => (a > b ? a : b))
                 : null,
             challengesByCategory: toRankingCategories(team.solves),
           };
@@ -838,7 +845,9 @@ export class DataService {
             rank: 0,
             lastSolveAt:
               player.solves.length > 0
-                ? player.solves.map((c) => c.solvedAt).reduce((a, b) => (a > b ? a : b))
+                ? player.solves
+                    .map((c) => c.solvedAt)
+                    .reduce((a, b) => (a > b ? a : b))
                 : null,
             challengesByCategory: toRankingCategories(player.solves),
           };
@@ -887,7 +896,11 @@ export class DataService {
     for (const category of categories) {
       categoryProgress.set(
         category,
-        this.getCategoryProgress(category, plainChallenges, solvedChallengeNames),
+        this.getCategoryProgress(
+          category,
+          plainChallenges,
+          solvedChallengeNames,
+        ),
       );
     }
     return Object.freeze({
@@ -1005,7 +1018,8 @@ export class DataService {
     const teamChallengeSolves = solves
       .filter(
         (s) =>
-          s.challengeName == challenge.name && team.players.includes(s.playerId),
+          s.challengeName == challenge.name &&
+          team.players.includes(s.playerId),
       )
       .sort(
         (a, b) =>
