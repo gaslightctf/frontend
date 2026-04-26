@@ -38,11 +38,6 @@ export class AppComponent implements OnInit, OnDestroy {
     this.metadataSubscription = this.dataService.metadata.subscribe(
       (metadata) => {
         this.metadata = metadata;
-        let favicon: HTMLLinkElement | null =
-          document.querySelector("#favicon");
-        if (favicon) {
-          favicon.href = metadata.eventLogoUrl;
-        }
       },
     );
     this.pagesSubscription = this.dataService.pages.subscribe((pages) => {
