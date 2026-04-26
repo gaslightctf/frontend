@@ -2,6 +2,9 @@ export const environment = {
   production: true,
   apiBaseUrl: "https://api.gaslightctf.cooking",
   wsEventsUrl: "wss://api.gaslightctf.cooking/api/events",
+
+  discordUrl: "https://discord.gg/6pxSsj4hfr",
+
   metadata: {
     version: "5.13.4",
     eventName: "gaslightCTF 2026",

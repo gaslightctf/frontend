@@ -5,11 +5,13 @@ import {
   BehaviorSubject,
   Observable,
   ReplaySubject,
+  catchError,
   combineLatest,
   distinctUntilChanged,
   filter,
   map,
   mergeMap,
+  of,
   retry,
   share,
   shareReplay,
@@ -17,6 +19,7 @@ import {
   tap,
   timer,
 } from "rxjs";
+import { HttpErrorResponse } from "@angular/common/http";
 import {
   Challenge,
   CurrentPlayer,
@@ -109,6 +112,9 @@ export class DataService {
   public readonly loginEvents: Observable<LoginResponse>;
   public isDisconnected = false;
   public isAuthenticated = false;
+  private _apiError = new BehaviorSubject<HttpErrorResponse | null>(null);
+  public readonly apiError: Observable<HttpErrorResponse | null> =
+    this._apiError.asObservable();
 
   constructor(
     private apiService: ApiService,
@@ -273,29 +279,25 @@ export class DataService {
   }
 
   refreshAllData() {
-    this.apiService.getMetadata().subscribe((metadata) => {
-      this._metadata.next(Object.freeze(metadata));
-    });
-    this.apiService.getPages().subscribe((pages) => {
-      this._pages.next(Object.freeze(pages.sort((a, b) => a.index - b.index)));
-    });
-    this.apiService.getPlayers().subscribe((players) => {
-      this._players.next(Object.freeze(players));
-    });
-    this.apiService.getChallenges().subscribe((challenges) => {
-      this._challenges.next(Object.freeze(challenges));
-    });
-    this.apiService.getTeams().subscribe((teams) => {
-      this._teams.next(Object.freeze(teams));
-    });
-    this.apiService.getSolves().subscribe((solves) => {
-      this._solves.next(Object.freeze(solves));
-    });
+    this.refreshMetadata().subscribe();
+    this.refreshPages().subscribe();
+    this.refreshPlayers().subscribe();
+    this.refreshChallenges().subscribe();
+    this.refreshTeams().subscribe();
+    this.refreshSolves().subscribe();
     if (this.isAuthenticated) {
-      this.apiService.getInstance().subscribe((instance) => {
-        this._instance.next(Object.freeze(instance));
-      });
+      this.refreshInstance().subscribe();
     }
+  }
+
+  reportApiError(error: HttpErrorResponse) {
+    if (this._apiError.getValue() != null) return;
+    this._apiError.next(error);
+    this.router.navigateByUrl("/api-error", { skipLocationChange: true });
+  }
+
+  clearApiError() {
+    this._apiError.next(null);
   }
 
   refreshWebSocket(accessToken: string | null) {
@@ -421,11 +423,19 @@ export class DataService {
     });
   }
 
+  private withApiErrorHandling<T>(fallback: T) {
+    return catchError<T, Observable<T>>((err: HttpErrorResponse) => {
+      this.reportApiError(err);
+      return of(fallback);
+    });
+  }
+
   refreshMetadata(): Observable<Metadata> {
     return this.apiService.getMetadata().pipe(
       tap((metadata) => {
         this._metadata.next(Object.freeze(metadata));
       }),
+      this.withApiErrorHandling<Metadata>(environment.metadata as Metadata),
     );
   }
 
@@ -434,6 +444,7 @@ export class DataService {
       tap((challenges) => {
         this._challenges.next(Object.freeze(challenges));
       }),
+      this.withApiErrorHandling<Challenge[]>([]),
     );
   }
 
@@ -444,6 +455,43 @@ export class DataService {
           Object.freeze(pages.sort((a, b) => a.index - b.index)),
         );
       }),
+      this.withApiErrorHandling<Page[]>([]),
+    );
+  }
+
+  refreshPlayers(): Observable<Player[]> {
+    return this.apiService.getPlayers().pipe(
+      tap((players) => {
+        this._players.next(Object.freeze(players));
+      }),
+      this.withApiErrorHandling<Player[]>([]),
+    );
+  }
+
+  refreshTeams(): Observable<Team[]> {
+    return this.apiService.getTeams().pipe(
+      tap((teams) => {
+        this._teams.next(Object.freeze(teams));
+      }),
+      this.withApiErrorHandling<Team[]>([]),
+    );
+  }
+
+  refreshSolves(): Observable<Solve[]> {
+    return this.apiService.getSolves().pipe(
+      tap((solves) => {
+        this._solves.next(Object.freeze(solves));
+      }),
+      this.withApiErrorHandling<Solve[]>([]),
+    );
+  }
+
+  refreshInstance(): Observable<Instance | null> {
+    return this.apiService.getInstance().pipe(
+      tap((instance) => {
+        this._instance.next(Object.freeze(instance));
+      }),
+      this.withApiErrorHandling<Instance | null>(null),
     );
   }
 
@@ -452,6 +500,7 @@ export class DataService {
       tap((player) => {
         this._currentPlayer.next(Object.freeze(player));
       }),
+      this.withApiErrorHandling<CurrentPlayer | null>(null),
     );
   }
 

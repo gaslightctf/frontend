@@ -18,6 +18,7 @@ import { combineLatest, map, Observable, of, take } from "rxjs";
 import { DataService } from "./services/data.service";
 import { playerAttributeGuard } from "./guards/player-attribute.guard";
 import { PlayerAttributesComponent } from "./pages/player-attributes/player-attributes.component";
+import { ApiErrorComponent } from "./pages/api-error/api-error.component";
 
 const challengeTitleResolver: ResolveFn<string> = (
   route: ActivatedRouteSnapshot,
@@ -202,6 +203,11 @@ const routes: Routes = [
     title: prefixedTitleResolver("Scoreboard"),
     canActivate: [playerAttributeGuard],
     runGuardsAndResolvers: "always",
+  },
+  {
+    path: "api-error",
+    component: ApiErrorComponent,
+    title: prefixedTitleResolver("API Unavailable"),
   },
   {
     path: "**",

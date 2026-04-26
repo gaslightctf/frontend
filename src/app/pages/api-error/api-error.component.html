@@ -1,0 +1,50 @@
+<div class="container pb-5">
+  <div class="row mt-3 mb-3">
+    <div class="col">
+      <h1>
+        <i class="bi bi-cloud-slash"></i>
+        Failed to contact the API
+      </h1>
+      <p class="lead">
+        The CTF backend isn't responding. It might be temporarily down.
+      </p>
+      <p>
+        Please ask for help in our
+        <a [href]="discordUrl"><strong>Discord</strong></a> &ndash; an organiser can confirm whether the
+        platform is having issues.
+      </p>
+    </div>
+  </div>
+
+  @if (error) {
+    <div class="row mb-3">
+      <div class="col">
+        <div class="alert alert-danger" role="alert">
+          <div><strong>{{ statusText }}</strong></div>
+          @if (error.url) {
+            <div class="small text-break mt-1">
+              <code>{{ error.url }}</code>
+            </div>
+          }
+          @if (detail) {
+            <div class="small mt-2 text-break">{{ detail }}</div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="row">
+    <div class="col">
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="retry()"
+        [disabled]="retrying"
+      >
+        <i class="bi bi-arrow-clockwise"></i>
+        Retry
+      </button>
+    </div>
+  </div>
+</div>
