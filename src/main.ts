@@ -71,31 +71,29 @@ bootstrapApplication(AppComponent, {
     provideZoneChangeDetection(),
     provideAppInitializer(() => {
       const dataService = inject(DataService);
-      dataService.loginEvents
-        .pipe(
-          take(1),
-          mergeMap((loginResponse) => {
-            if (
-              !environment.metadata.allowAnonymousAccess &&
-              !loginResponse.isAuthenticated
-            ) {
-              console.log(
-                "Redirecting to authorization endpoint since anonymous access is disabled and the player is not logged in.",
-              );
-              dataService.login();
-              return NEVER; // Stall execution since login() triggers a redirect that forces a page reload anyways.
-            }
+      return dataService.loginEvents.pipe(
+        take(1),
+        mergeMap((loginResponse) => {
+          if (
+            !environment.metadata.allowAnonymousAccess &&
+            !loginResponse.isAuthenticated
+          ) {
+            console.log(
+              "Redirecting to authorization endpoint since anonymous access is disabled and the player is not logged in.",
+            );
+            dataService.login();
+            return NEVER; // Stall execution since login() triggers a redirect that forces a page reload anyways.
+          }
 
-            dataService.refreshAllData();
-            if (loginResponse.isAuthenticated) {
-              dataService.refreshWebSocket(loginResponse.accessToken);
-            } else {
-              dataService.refreshWebSocket(null);
-            }
-            return dataService.refreshPages();
-          }),
-        )
-        .subscribe();
+          dataService.refreshAllData();
+          if (loginResponse.isAuthenticated) {
+            dataService.refreshWebSocket(loginResponse.accessToken);
+          } else {
+            dataService.refreshWebSocket(null);
+          }
+          return dataService.refreshPages();
+        }),
+      );
     }),
   ],
 }).catch((err) => console.error(err));

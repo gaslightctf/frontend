@@ -34,12 +34,7 @@
               "node_modules/bootstrap-icons/font/bootstrap-icons.min.css"
             ],
             "scripts": [],
-            "browser": "src/main.ts",
-            "optimization": {
-              "styles": {
-                "inlineCritical": false
-              }
-            }
+            "browser": "src/main.ts"
           },
           "configurations": {
             "production": {
