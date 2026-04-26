@@ -1,7 +1,7 @@
 export const environment = {
   production: false,
-  apiBaseUrl: "https://api-dev.gaslightctf.cooking",
-  wsEventsUrl: "wss://api-dev.gaslightctf.cooking/api/events",
+  apiBaseUrl: "https://play-dev.gaslightctf.cooking",
+  wsEventsUrl: "wss://play-dev.gaslightctf.cooking/api/events",
 
   discordUrl: "https://discord.gg/6pxSsj4hfr",
 
