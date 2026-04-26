@@ -10,7 +10,6 @@ import { BrowserModule, bootstrapApplication } from "@angular/platform-browser";
 import { AppRoutingModule } from "./app/app-routing.module";
 import { FormsModule } from "@angular/forms";
 import { AngularDraggableModule } from "angular2-draggable";
-import { provideEchartsCore } from "ngx-echarts";
 import { AppComponent } from "./app/app.component";
 import {
   importProvidersFrom,
@@ -19,28 +18,8 @@ import {
   provideZoneChangeDetection,
 } from "@angular/core";
 import { DataService } from "./app/services/data.service";
-import { catchError, mergeMap, NEVER, take } from "rxjs";
-import * as echarts from "echarts/core";
-import { BarChart, LineChart } from "echarts/charts";
-import {
-  GridComponent,
-  LegendComponent,
-  TitleComponent,
-  TooltipComponent,
-} from "echarts/components";
-import { CanvasRenderer, SVGRenderer } from "echarts/renderers";
+import { mergeMap, NEVER, take } from "rxjs";
 import { environment } from "@env/environment";
-
-echarts.use([
-  BarChart,
-  LineChart,
-  GridComponent,
-  TitleComponent,
-  TooltipComponent,
-  LegendComponent,
-  CanvasRenderer,
-  SVGRenderer,
-]);
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -50,7 +29,6 @@ bootstrapApplication(AppComponent, {
       FormsModule,
       AngularDraggableModule,
     ),
-    provideEchartsCore({ echarts }),
     provideHttpClient(withInterceptors([authInterceptor()])),
     provideAuth({
       config: {
