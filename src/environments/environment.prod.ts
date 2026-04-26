@@ -10,7 +10,7 @@ export const environment = {
     eventName: "gaslightCTF 2026",
     eventOrganiser: "gaslightCTF",
     eventLogoUrl: "https://gaslightctf.cooking/assets/gaslighticoncolor.png",
-    start: "2026-04-25T22:22:30Z",
+    start: "2026-08-14T12:00:00Z",
     end: "2026-08-17T12:00:00Z",
     allowAnonymousAccess: true,
     playerAttributes: [
