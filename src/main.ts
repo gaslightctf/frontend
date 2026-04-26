@@ -29,6 +29,7 @@ import {
   TooltipComponent,
 } from "echarts/components";
 import { CanvasRenderer, SVGRenderer } from "echarts/renderers";
+import { environment } from "@env/environment";
 
 echarts.use([
   BarChart,
@@ -54,7 +55,7 @@ bootstrapApplication(AppComponent, {
     provideAuth({
       config: {
         configId: "berg",
-        authority: window.location.origin,
+        authority: environment.apiBaseUrl,
         redirectUrl: window.location.origin + "/frontend/oidc-callback",
         postLogoutRedirectUri: window.location.origin,
         clientId: "berg-client",
@@ -64,52 +65,37 @@ bootstrapApplication(AppComponent, {
         useRefreshToken: true,
         ignoreNonceAfterRefresh: true,
         renewTimeBeforeTokenExpiresInSeconds: 30,
-        secureRoutes: [window.location.origin + "/api"],
+        secureRoutes: [`${environment.apiBaseUrl}/api`],
       },
     }),
     provideZoneChangeDetection(),
     provideAppInitializer(() => {
-      let dataService = inject(DataService);
-      return dataService.loginEvents.pipe(
-        take(1),
-        mergeMap((loginResponse) => {
-          return dataService.refreshMetadata().pipe(
-            catchError((err, _) => {
-              let httpError = err as HttpErrorResponse;
-              if (httpError.status == 401) {
-                console.log(
-                  "Redirecting to authorization endpoint since metadata request got error status 401.",
-                );
-                dataService.login();
-              } else {
-                console.error("Failed to fetch metadata.");
-                console.error(err);
-              }
-              return NEVER; // Stall execution since login() triggers a redrect that forces a page reload anyways.
-            }),
-            mergeMap((metadata) => {
-              if (
-                !metadata.allowAnonymousAccess &&
-                !loginResponse.isAuthenticated
-              ) {
-                console.log(
-                  "Redirecting to authorization endpoint since anonymous access is disabled and the player is not logged in.",
-                );
-                dataService.login();
-                return NEVER; // Stall execution since login() triggers a redrect that forces a page reload anyways.
-              } else {
-                dataService.refreshAllData();
-                if (loginResponse.isAuthenticated) {
-                  dataService.refreshWebSocket(loginResponse.accessToken);
-                } else {
-                  dataService.refreshWebSocket(null);
-                }
-                return dataService.refreshPages();
-              }
-            }),
-          );
-        }),
-      );
+      const dataService = inject(DataService);
+      dataService.loginEvents
+        .pipe(
+          take(1),
+          mergeMap((loginResponse) => {
+            if (
+              !environment.metadata.allowAnonymousAccess &&
+              !loginResponse.isAuthenticated
+            ) {
+              console.log(
+                "Redirecting to authorization endpoint since anonymous access is disabled and the player is not logged in.",
+              );
+              dataService.login();
+              return NEVER; // Stall execution since login() triggers a redirect that forces a page reload anyways.
+            }
+
+            dataService.refreshAllData();
+            if (loginResponse.isAuthenticated) {
+              dataService.refreshWebSocket(loginResponse.accessToken);
+            } else {
+              dataService.refreshWebSocket(null);
+            }
+            return dataService.refreshPages();
+          }),
+        )
+        .subscribe();
     }),
   ],
 }).catch((err) => console.error(err));

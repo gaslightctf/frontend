@@ -116,6 +116,7 @@ export class DataService {
     private router: Router,
     private oidcSecurityService: OidcSecurityService,
   ) {
+    this._metadata.next(Object.freeze(environment.metadata));
     this.loginEvents = this.oidcSecurityService.checkAuth().pipe(share());
     this.loginEvents.subscribe((loginResponse: LoginResponse) => {
       const { isAuthenticated, userData, accessToken, idToken, configId } =
