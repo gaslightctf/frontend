@@ -5,6 +5,7 @@ import {
   BehaviorSubject,
   Observable,
   ReplaySubject,
+  TimeoutError,
   catchError,
   combineLatest,
   distinctUntilChanged,
@@ -12,11 +13,13 @@ import {
   map,
   mergeMap,
   of,
+  pipe,
   retry,
   share,
   shareReplay,
   take,
   tap,
+  timeout,
   timer,
 } from "rxjs";
 import { HttpErrorResponse } from "@angular/common/http";
@@ -408,10 +411,20 @@ export class DataService {
   }
 
   private withApiErrorHandling<T>(fallback: T) {
-    return catchError<T, Observable<T>>((err: HttpErrorResponse) => {
-      this.reportApiError(err);
-      return of(fallback);
-    });
+    return pipe(
+      timeout(10000),
+      catchError<T, Observable<T>>((err) => {
+        if (err instanceof TimeoutError) {
+          err = new HttpErrorResponse({
+            error: err,
+            status: 0,
+            statusText: "Request Timeout",
+          });
+        }
+        this.reportApiError(err);
+        return of(fallback);
+      }),
+    );
   }
 
   refreshMetadata(): Observable<Metadata> {
