@@ -9,7 +9,7 @@ import { ChallengesComponent } from "./pages/challenges/challenges.component";
 import { ProfileSettingsComponent } from "./pages/profile-settings/profile-settings.component";
 import { PlayerDetailComponent } from "./pages/player-detail/player-detail.component";
 import { ChallengeDetailComponent } from "./pages/challenge-detail/challenge-detail.component";
-import { DynamicPageComponent } from "./pages/dynamic-page/dynamic-page.component";
+import { HomeComponent } from "./pages/home/home.component";
 import { TeamDetailComponent } from "./pages/team-detail/team-detail.component";
 import { TeamComponent } from "./pages/team/team.component";
 import { provideEchartsCore } from "ngx-echarts";
@@ -80,34 +80,6 @@ const teamTitleResolver: ResolveFn<string> = (
   );
 };
 
-const dynamicPageTitleResolver: ResolveFn<string> = (
-  route: ActivatedRouteSnapshot,
-): Observable<string> => {
-  const url = route.pathFromRoot
-    .map((v) => v.url.map((segment) => segment.toString()).join("/"))
-    .join("/");
-  const dataService = inject(DataService);
-  return combineLatest([dataService.metadata, dataService.pages]).pipe(
-    take(1),
-    map((params) => {
-      const [metadata, pages] = params;
-
-      let page =
-        pages.find((p) => {
-          let pathPath = structuredClone(p.path);
-          if (!pathPath.startsWith("/")) {
-            pathPath = "/" + pathPath;
-          }
-          return pathPath == url;
-        }) || null;
-      if (page) {
-        return `${metadata.eventName}: ${page.title}`;
-      }
-      return `${metadata.eventName}: Not Found`;
-    }),
-  );
-};
-
 function prefixedTitleResolver(title: string): ResolveFn<string> {
   return (route: ActivatedRouteSnapshot): Observable<string> => {
     const dataService = inject(DataService);
@@ -121,6 +93,14 @@ function prefixedTitleResolver(title: string): ResolveFn<string> {
 }
 
 const routes: Routes = [
+  {
+    path: "",
+    component: HomeComponent,
+    title: prefixedTitleResolver("Home"),
+    canActivate: [playerAttributeGuard],
+    runGuardsAndResolvers: "always",
+    pathMatch: "full",
+  },
   {
     path: "challenges",
     component: ChallengesComponent,
@@ -211,10 +191,7 @@ const routes: Routes = [
   },
   {
     path: "**",
-    component: DynamicPageComponent,
-    title: dynamicPageTitleResolver,
-    canActivate: [playerAttributeGuard],
-    runGuardsAndResolvers: "always",
+    redirectTo: "",
   },
 ];
 

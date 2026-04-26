@@ -59,13 +59,6 @@ export interface Service {
   tls: boolean;
 }
 
-export interface Page {
-  title: string;
-  index: number;
-  path: string;
-  content: string;
-}
-
 export interface Player {
   id: string;
   name: string;

@@ -7,7 +7,6 @@ import {
   CurrentTeam,
   Instance,
   Metadata,
-  Page,
   Player,
   Solve,
   Team,
@@ -86,12 +85,6 @@ export class ApiService {
       this.baseUrl + "/api/metadata",
       this.httpOptions,
     );
-  }
-
-  /* Page */
-
-  getPages(): Observable<Page[]> {
-    return this.http.get<Page[]>(this.baseUrl + "/api/pages", this.httpOptions);
   }
 
   /* Player */

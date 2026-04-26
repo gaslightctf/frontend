@@ -25,7 +25,6 @@ import {
   CurrentPlayer,
   Instance,
   Metadata,
-  Page,
   Player,
   Solve,
   Team,
@@ -60,7 +59,6 @@ export class DataService {
   private _challenges = new ReplaySubject<readonly Challenge[]>(1);
   private _teams = new ReplaySubject<readonly Team[]>(1);
   private _solves = new ReplaySubject<readonly Solve[]>(1);
-  private _pages = new BehaviorSubject<readonly Page[]>([]);
   private _metadata = new ReplaySubject<Metadata>(1);
   private _instance = new BehaviorSubject<Instance | null>(null);
   private _hasCTFStarted = new BehaviorSubject<boolean>(false);
@@ -83,8 +81,6 @@ export class DataService {
   public readonly players: Observable<readonly Player[]> = this._players
     .asObservable()
     .pipe(tap((p) => (this._lastPlayers = p)));
-  public readonly pages: Observable<readonly Page[]> =
-    this._pages.asObservable();
   public readonly teams: Observable<readonly Team[]> = this._teams
     .asObservable()
     .pipe(tap((t) => (this._lastTeams = t)));
@@ -280,7 +276,6 @@ export class DataService {
 
   refreshAllData() {
     this.refreshMetadata().subscribe();
-    this.refreshPages().subscribe();
     this.refreshPlayers().subscribe();
     this.refreshChallenges().subscribe();
     this.refreshTeams().subscribe();
@@ -373,17 +368,6 @@ export class DataService {
             this._challenges.next(Object.freeze(modifiedChallenges));
           }
           break;
-        case "page":
-          {
-            let page = message.message as Page;
-            let modifiedPages = structuredClone(this._pages.getValue()).filter(
-              (p) => p.path != page.path,
-            );
-            modifiedPages.push(page);
-            modifiedPages.sort((a, b) => a.index - b.index);
-            this._pages.next(Object.freeze(modifiedPages));
-          }
-          break;
         case "instance":
           {
             let instance = message.message as Instance;
@@ -445,17 +429,6 @@ export class DataService {
         this._challenges.next(Object.freeze(challenges));
       }),
       this.withApiErrorHandling<Challenge[]>([]),
-    );
-  }
-
-  refreshPages(): Observable<Page[]> {
-    return this.apiService.getPages().pipe(
-      tap((pages) => {
-        this._pages.next(
-          Object.freeze(pages.sort((a, b) => a.index - b.index)),
-        );
-      }),
-      this.withApiErrorHandling<Page[]>([]),
     );
   }
 

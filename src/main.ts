@@ -18,7 +18,7 @@ import {
   provideZoneChangeDetection,
 } from "@angular/core";
 import { DataService } from "./app/services/data.service";
-import { mergeMap, NEVER, take } from "rxjs";
+import { mergeMap, NEVER, of, take } from "rxjs";
 import { environment } from "@env/environment";
 
 bootstrapApplication(AppComponent, {
@@ -69,7 +69,7 @@ bootstrapApplication(AppComponent, {
           } else {
             dataService.refreshWebSocket(null);
           }
-          return dataService.refreshPages();
+          return of(null);
         }),
       );
     }),

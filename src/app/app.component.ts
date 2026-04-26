@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
 import { DataService } from "./services/data.service";
 import { RouterLink, RouterLinkActive, RouterOutlet } from "@angular/router";
 import { Subscription } from "rxjs";
-import { Metadata, Page, Player } from "./api-model";
+import { Metadata, Player } from "./api-model";
 import { NgbDropdownModule, NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
 
 @Component({
@@ -23,10 +23,8 @@ export class AppComponent implements OnInit, OnDestroy {
   currentPlayer: Player | null = null;
   metadata: Metadata | null = null;
   areTeamsEnabled = false;
-  pages: readonly Page[] = [];
 
   private metadataSubscription: Subscription | null = null;
-  private pagesSubscription: Subscription | null = null;
   private loggedInPlayerSubscription: Subscription | null = null;
   private areTeamsEnabledSubscription: Subscription | null = null;
 
@@ -40,9 +38,6 @@ export class AppComponent implements OnInit, OnDestroy {
         this.metadata = metadata;
       },
     );
-    this.pagesSubscription = this.dataService.pages.subscribe((pages) => {
-      this.pages = pages;
-    });
     this.loggedInPlayerSubscription = this.dataService
       .getLoggedInPlayer()
       .subscribe((loggedinPlayer) => {
@@ -57,7 +52,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.metadataSubscription?.unsubscribe();
-    this.pagesSubscription?.unsubscribe();
     this.loggedInPlayerSubscription?.unsubscribe();
     this.areTeamsEnabledSubscription?.unsubscribe();
   }
