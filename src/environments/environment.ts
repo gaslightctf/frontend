@@ -12,7 +12,7 @@ export const environment = {
     eventLogoUrl: "https://gaslightctf.cooking/assets/gaslighticoncolor.png",
     start: "2026-04-25T22:22:30Z",
     end: "2026-08-17T12:00:00Z",
-    allowAnonymousAccess: true,
+    allowAnonymousAccess: false,
     playerAttributes: [
       {
         name: "division",
