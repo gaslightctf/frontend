@@ -7,6 +7,7 @@ gaslightCTF's [Berg](https://berg.norelect.ch/) frontend. Forked on 2026-04-23 f
 Heavily vibecoded (not an Angular dev).
 
 - [x] deploying as static files instead of nginx
+    - [x] lazy loading scoreboard chart dependencies
 - [x] bundling metadata to prevent FOUC
 - [x] error page on API failure
-- [ ] replacing dynamic pages system with static pages instead
+- [x] replacing dynamic pages system with static pages instead
