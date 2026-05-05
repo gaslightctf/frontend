@@ -2,7 +2,7 @@
   description = "Berg frontend";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/pull/508770/head";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
 
     devshell.url = "github:numtide/devshell";
