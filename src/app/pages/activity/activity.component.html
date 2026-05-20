@@ -27,7 +27,7 @@
         ) {
           <tr>
             <td class="text-wrap">
-              {{ activity.solve.solvedAt | date: "medium" }}
+              {{ activity.solve.solvedAt | date: "yyyy-MM-dd HH:mm:ss" }}
               <wbr />
               <span class="text-muted text-nowrap"
                 >({{ helper.relativeTime(activity.solve.solvedAt) }})</span

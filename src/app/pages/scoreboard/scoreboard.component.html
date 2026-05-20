@@ -104,7 +104,7 @@
               <td>{{ ranking.score }}</td>
               <td class="text-wrap">
                 @if (ranking.lastSolveAt) {
-                  {{ ranking.lastSolveAt | date: "medium" }}
+                  {{ ranking.lastSolveAt | date: "yyyy-MM-dd HH:mm:ss" }}
                   <wbr />
                   <span class="text-muted text-nowrap"
                     >({{ helper.relativeTime(ranking.lastSolveAt) }})</span
