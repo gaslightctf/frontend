@@ -1,0 +1,7 @@
+<p class="text-center mb-1">{{ label }}</p>
+<h1 class="text-center font-monospace" [ngbTooltip]="targetDetails">
+  {{ countdownText }}
+</h1>
+<ng-template #targetDetails>
+  {{ target | date: "yyyy-MM-dd HH:mm:ss" }}
+</ng-template>

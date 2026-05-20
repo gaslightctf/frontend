@@ -5,13 +5,7 @@
   <div class="mb-3">
     <div class="card">
       <div class="card-body">
-        <p class="countdown-label">CTF starts in:</p>
-        <h1 class="countdown" [ngbTooltip]="startDetails">
-          {{ helper.getCountdownText(ctfStart, null) }}
-        </h1>
-        <ng-template #startDetails>
-          {{ ctfStart | date: "yyyy-MM-dd HH:mm:ss" }}
-        </ng-template>
+        <app-countdown [target]="ctfStart" label="CTF starts in:" />
       </div>
     </div>
   </div>

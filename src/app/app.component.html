@@ -160,16 +160,19 @@
 </div>
 <div class="container">
   <footer class="d-flex flex-wrap justify-content-between py-3 my-4 border-top">
-    <div class="align-items-start">
-      <span class="mb-12 mb-md-0 text-muted"
-        >© {{ year }} {{ metadata?.eventOrganiser }}</span
-      >
+    <div class="align-items-start d-flex gap-2">
+      <a href="https://gaslightctf.cooking/" target="_blank" rel="noopener noreferrer" class="mb-12 mb-md-0 text-muted">© {{ year }} {{ metadata?.eventOrganiser }}</a>
+      <span class="text-muted">·</span>
+      <a href="https://discord.gg/6pxSsj4hfr" target="_blank" rel="noopener noreferrer" class="mb-12 mb-md-0">Discord</a>
     </div>
     <div class="align-items-end">
-      <span
+      <a
+        href="https://github.com/BergCTF/platform"
+        target="_blank"
+        rel="noopener noreferrer"
         class="mb-12 mb-md-0 text-muted"
         [ngbTooltip]="'Version ' + (metadata?.version ?? 'loading')"
-        >Berg CTF Platform</span
+        >Berg CTF Platform</a
       >
     </div>
   </footer>
