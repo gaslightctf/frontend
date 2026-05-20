@@ -33,9 +33,9 @@ const challengeTitleResolver: ResolveFn<string> = (
     map((params) => {
       const [metadata, challenge] = params;
       if (challenge) {
-        return `${metadata.eventName} - Challenge: ${challenge.challenge.name}`;
+        return `${challenge.challenge.name} | ${metadata.eventName}`;
       }
-      return `${metadata.eventName} - Challenge: Not Found`;
+      return `Challenge Not Found | ${metadata.eventName}`;
     }),
   );
 };
@@ -53,9 +53,9 @@ const playerTitleResolver: ResolveFn<string> = (
     map((params) => {
       const [metadata, player] = params;
       if (player) {
-        return `${metadata.eventName} - Player: ${player.name}`;
+        return `${player.name} | ${metadata.eventName}`;
       }
-      return `${metadata.eventName} - Player: Not Found`;
+      return `Player Not Found | ${metadata.eventName}`;
     }),
   );
 };
@@ -73,9 +73,9 @@ const teamTitleResolver: ResolveFn<string> = (
     map((params) => {
       const [metadata, team] = params;
       if (team) {
-        return `${metadata.eventName} - Team: ${team.name}`;
+        return `${team.name} | ${metadata.eventName}`;
       }
-      return `${metadata.eventName} - Team: Not Found`;
+      return `Team Not Found | ${metadata.eventName}`;
     }),
   );
 };
@@ -86,7 +86,7 @@ function prefixedTitleResolver(title: string): ResolveFn<string> {
     return dataService.metadata.pipe(
       take(1),
       map((metadata) => {
-        return `${metadata.eventName}: ${title}`;
+        return `${title} | ${metadata.eventName}`;
       }),
     );
   };
