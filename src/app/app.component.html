@@ -12,20 +12,23 @@
     <div
       class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start navbar navbar-expand-lg navbar-95"
     >
-      @if (metadata?.eventLogoUrl && metadata?.eventLogoUrl != "") {
-        <a
-          routerLink="/"
-          class="d-flex align-items-center mb-2 mb-lg-0 text-primary text-decoration-none"
-        >
+      <a
+        routerLink="/"
+        class="d-flex align-items-center mb-2 mb-lg-0 text-primary text-decoration-none me-2"
+      >
+        <div class="position-relative event-logo">
           <img
-            class="bi me-2"
-            width="32"
-            height="32"
-            [src]="metadata?.eventLogoUrl"
-            alt="Logo"
+            class="position-absolute top-0 start-0 w-100 h-100"
+            src="https://gaslightctf.cooking/assets/logoBackground.png"
+            aria-hidden="true"
           />
-        </a>
-      }
+          <img
+            class="position-absolute top-0 start-0 w-100 h-100"
+            src="https://gaslightctf.cooking/assets/gaslightCTFlogo.gif"
+            alt="gaslightCTF logo"
+          />
+        </div>
+      </a>
       <ul
         class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0"
       >
