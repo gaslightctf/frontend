@@ -9,6 +9,7 @@ import { HttpErrorResponse } from "@angular/common/http";
 import { ChallengeDetail } from "src/app/model";
 import { NgbNavModule } from "@ng-bootstrap/ng-bootstrap";
 import { HelperService } from "src/app/services/helper.service";
+import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 
 @Component({
   selector: "app-challenge-detail",
@@ -34,7 +35,15 @@ export class ChallengeDetailComponent implements OnInit, OnDestroy {
     public location: Location,
     public helper: HelperService,
     private route: ActivatedRoute,
+    private sanitizer: DomSanitizer,
   ) {}
+
+  get descriptionHtml(): SafeHtml | null {
+    if (!this.challengeDetail) return null;
+    return this.sanitizer.bypassSecurityTrustHtml(
+      this.challengeDetail.challenge.description,
+    );
+  }
 
   ngOnInit(): void {
     let name = this.route.params.pipe(map((params) => params["name"]));
