@@ -13,7 +13,12 @@ import { NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
   selector: "app-challenges",
   templateUrl: "./challenges.component.html",
   styleUrls: ["./challenges.component.less"],
-  imports: [RouterLink, ChallengeStatusComponent, CountdownComponent, NgbTooltip],
+  imports: [
+    RouterLink,
+    ChallengeStatusComponent,
+    CountdownComponent,
+    NgbTooltip,
+  ],
 })
 export class ChallengesComponent implements OnInit, OnDestroy {
   public challengeDetailCategories: readonly ChallengeDetailCategory[] = [];

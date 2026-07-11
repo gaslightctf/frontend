@@ -27,7 +27,10 @@ export class ChallengeStatusComponent implements OnInit, OnDestroy {
       this.instance = instance;
       this.updateTimeRemaining();
     });
-    this.countdownInterval = setInterval(() => this.updateTimeRemaining(), 1000);
+    this.countdownInterval = setInterval(
+      () => this.updateTimeRemaining(),
+      1000,
+    );
   }
 
   ngOnDestroy(): void {
