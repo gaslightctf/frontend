@@ -82,6 +82,8 @@
             ];
           };
 
+          packages.bunDeps = bun2nix.fetchBunDeps { bunNix = ./bun.nix; };
+
           packages.default = bun2nix.mkDerivation {
             pname = "berg-frontend";
             version = "1.0.0";
@@ -118,7 +120,7 @@
               bun2nix.hook
             ];
 
-            bunDeps = bun2nix.fetchBunDeps { bunNix = ./bun.nix; };
+            inherit (self'.packages) bunDeps;
 
             buildPhase = ''
               bun run build
