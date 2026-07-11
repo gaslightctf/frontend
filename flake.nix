@@ -16,12 +16,12 @@
     extra-substituters = [
       "https://cache.nixos.org"
       "https://nix-community.cachix.org"
-      "https://cache.garnix.io"
+      "https://cache.nix-ci.com"
     ];
     extra-trusted-public-keys = [
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-      "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
+      "nix-ci:g3xV5BDTLtIBZr/A00IU1x0EtKKlb7YLgBN2SgYgM6A="
     ];
   };
 
@@ -128,7 +128,6 @@
               cp -R ./dist/berg-frontend/browser/ $out
             '';
           };
-
           packages.prod = self'.packages.default.overrideAttrs {
             pname = "berg-frontend-prod";
             buildPhase = ''
@@ -136,19 +135,15 @@
             '';
           };
 
-          apps.deploy.program = pkgs.writeShellApplication {
+          packages.deploy = pkgs.writeShellApplication {
             name = "deploy";
 
+            derivationArgs = {
+              PROJECT_NAME = "frontend-dev";
+              RESULT = "${self'.packages.default}";
+            };
+
             text = ''
-              export SOPS_AGE_KEY_FILE="$GARNIX_ACTION_PRIVATE_KEY_FILE"
-
-              PROJECT_NAME="frontend-dev"
-              RESULT="${self'.packages.default}"
-              if [ "$GARNIX_BRANCH" = "prod" ]; then
-                PROJECT_NAME="frontend"
-                RESULT="${self'.packages.prod}"
-              fi
-
               sops exec-env "${./data/deploy.yaml}" \
                 "wrangler pages deploy '$RESULT' --project-name '$PROJECT_NAME'"
             '';
@@ -157,6 +152,12 @@
               pkgs.wrangler
               pkgs.sops
             ];
+          };
+          packages.deploy-prod = self'.packages.deploy.overrideAttrs {
+            name = "deploy-prod";
+
+            PROJECT_NAME = "frontend";
+            RESULT = "${self'.packages.prod}";
           };
 
           checks.biome = pkgs.writeShellApplication {
