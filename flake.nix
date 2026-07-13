@@ -140,14 +140,9 @@
           packages.deploy = pkgs.writeShellApplication {
             name = "deploy";
 
-            derivationArgs = {
-              PROJECT_NAME = "frontend-dev";
-              RESULT = "${self'.packages.default}";
-            };
-
             text = ''
               sops exec-env "${./data/deploy.yaml}" \
-                "wrangler pages deploy '$RESULT' --project-name '$PROJECT_NAME'"
+                "wrangler pages deploy '${self'.packages.default}' --project-name 'frontend-dev'"
             '';
 
             runtimeInputs = [
@@ -155,11 +150,18 @@
               pkgs.sops
             ];
           };
-          packages.deploy-prod = self'.packages.deploy.overrideAttrs {
-            name = "deploy-prod";
+          packages.deploy-prod = pkgs.writeShellApplication {
+            name = "deploy";
 
-            PROJECT_NAME = "frontend";
-            RESULT = "${self'.packages.prod}";
+            text = ''
+              sops exec-env "${./data/deploy.yaml}" \
+                "wrangler pages deploy '${self'.packages.prod}' --project-name 'frontend'"
+            '';
+
+            runtimeInputs = [
+              pkgs.wrangler
+              pkgs.sops
+            ];
           };
 
           checks.biome = pkgs.writeShellApplication {
