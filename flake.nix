@@ -89,7 +89,7 @@
             };
           };
 
-          packages.default = bun2nix.mkDerivation {
+          packages.default = pkgs.stdenv.mkDerivation {
             pname = "berg-frontend";
             version = "1.0.0";
 
