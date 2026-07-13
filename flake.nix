@@ -82,7 +82,12 @@
             ];
           };
 
-          packages.bunDeps = bun2nix.fetchBunDeps { bunNix = ./bun.nix; };
+          packages.bunDeps = bun2nix.fetchBunDeps {
+            bunNix = builtins.path {
+              path = ./bun.nix;
+              name = "bun.nix";
+            };
+          };
 
           packages.default = bun2nix.mkDerivation {
             pname = "berg-frontend";
