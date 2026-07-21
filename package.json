@@ -6,8 +6,7 @@
     "start": "ng serve",
     "build": "ng build --configuration development",
     "build:prod": "ng build --configuration production",
-    "watch": "ng build --watch --configuration development",
-    "postinstall": "bun2nix -o bun.nix"
+    "watch": "ng build --watch --configuration development"
   },
   "private": true,
   "dependencies": {

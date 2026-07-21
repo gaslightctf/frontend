@@ -7,9 +7,6 @@
 
     devshell.url = "github:numtide/devshell";
     devshell.inputs.nixpkgs.follows = "nixpkgs";
-
-    bun2nix.url = "github:nix-community/bun2nix";
-    bun2nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   nixConfig = {
@@ -39,16 +36,7 @@
       ];
 
       perSystem =
-        {
-          pkgs,
-          inputs',
-          self',
-          lib,
-          ...
-        }:
-        let
-          bun2nix = inputs'.bun2nix.packages.default;
-        in
+        { pkgs, ... }:
         {
           devshells.default = {
             commands = [
@@ -56,116 +44,11 @@
                 package = pkgs.bun;
                 category = "bun";
               }
-              {
-                package = bun2nix;
-                category = "bun";
-              }
-
-              {
-                package = pkgs.wrangler;
-                category = "deploy";
-              }
-              {
-
-                package = pkgs.sops;
-                category = "secrets";
-              }
-              {
-                package = pkgs.age;
-                category = "secrets";
-              }
 
               {
                 package = pkgs.biome;
                 category = "format";
               }
-            ];
-          };
-
-          packages.bunDeps = bun2nix.fetchBunDeps {
-            bunNix = builtins.path {
-              path = ./bun.nix;
-              name = "bun.nix";
-            };
-          };
-
-          packages.default = pkgs.stdenv.mkDerivation {
-            pname = "berg-frontend";
-            version = "1.0.0";
-
-            src = lib.cleanSourceWith {
-              filter = (
-                name: type:
-                type != "regular"
-                || !(builtins.elem (baseNameOf name) [
-                  "Dockerfile"
-                  "nginx.conf"
-
-                  "garnix.yaml"
-                  "flake.nix"
-                  "flake.lock"
-
-                  "README.md"
-                  "LICENSE"
-
-                  ".envrc"
-                  ".gitattributes"
-                  ".gitignore"
-                  ".sops.yaml"
-                  "deploy.yaml"
-                ])
-              );
-              src = lib.cleanSourceWith {
-                filter = lib.cleanSourceFilter;
-                src = ./.;
-              };
-            };
-
-            nativeBuildInputs = [
-              bun2nix.hook
-            ];
-
-            inherit (self'.packages) bunDeps;
-
-            buildPhase = ''
-              bun run build
-            '';
-
-            installPhase = ''
-              cp -R ./dist/berg-frontend/browser/ $out
-            '';
-          };
-          packages.prod = self'.packages.default.overrideAttrs {
-            pname = "berg-frontend-prod";
-            buildPhase = ''
-              bun run build:prod
-            '';
-          };
-
-          packages.deploy = pkgs.writeShellApplication {
-            name = "deploy";
-
-            text = ''
-              sops exec-env "${./data/deploy.yaml}" \
-                "wrangler pages deploy '${self'.packages.default}' --project-name 'frontend-dev'"
-            '';
-
-            runtimeInputs = [
-              pkgs.wrangler
-              pkgs.sops
-            ];
-          };
-          packages.deploy-prod = pkgs.writeShellApplication {
-            name = "deploy";
-
-            text = ''
-              sops exec-env "${./data/deploy.yaml}" \
-                "wrangler pages deploy '${self'.packages.prod}' --project-name 'frontend'"
-            '';
-
-            runtimeInputs = [
-              pkgs.wrangler
-              pkgs.sops
             ];
           };
 
