@@ -7,6 +7,27 @@
   <span>Team</span>
   <h1>{{ teamDetail.name }}</h1>
   <p>Score: {{ teamDetail.score }}</p>
+  @if (hasDivisions) {
+    <p>
+      Division: <b>{{ divisionLabel(teamDetail.division) }}</b>
+    </p>
+  }
+  <p>
+    @if (overallRank) {
+      <span class="me-3">Overall rank: #{{ overallRank }}</span>
+    }
+    @if (divisionRank) {
+      <span>Division rank: #{{ divisionRank }}</span>
+    }
+  </p>
+  @if (hasDivisions && membersMismatch) {
+    <div class="alert alert-warning" role="alert">
+      <i class="bi bi-exclamation-triangle"></i> Your members are in different
+      divisions, so your team competes in the default
+      <b>{{ divisionLabel(teamDetail.division) }}</b> division. Make sure everyone
+      selects the same division to compete in it as a team.
+    </div>
+  }
   <div class="container mb-4">
     <div class="row">
       <div class="card">
@@ -48,6 +69,9 @@
                 <thead>
                   <tr>
                     <th scope="col">Player</th>
+                    @if (hasDivisions) {
+                      <th scope="col">Division</th>
+                    }
                   </tr>
                 </thead>
                 @for (player of teamDetail.players; track player) {
@@ -58,6 +82,9 @@
                           player.name
                         }}</a>
                       </td>
+                      @if (hasDivisions) {
+                        <td>{{ memberDivisionLabel(player) }}</td>
+                      }
                     </tr>
                   </tbody>
                 }

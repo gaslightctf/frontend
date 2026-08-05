@@ -123,6 +123,20 @@ export class ApiService {
     );
   }
 
+  adminSetPlayerAttributes(
+    id: string,
+    attributes: { [key: string]: string },
+  ): Observable<void> {
+    let data = {
+      attributes: attributes,
+    };
+    return this.http.patch<void>(
+      this.baseUrl + "/api/players/" + id,
+      data,
+      this.httpOptions,
+    );
+  }
+
   resetApiKey(): Observable<string> {
     return this.http.delete<string>(
       this.baseUrl + "/api/players/current/api-key",

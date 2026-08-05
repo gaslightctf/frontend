@@ -13,6 +13,14 @@ export interface Metadata {
   challengeMaximumValue: number;
   challengeMinimumValue: number;
   challengeSolvesBeforeMinimum: number;
+  // `name` of the player attribute acting as the prize division, or null when
+  // divisions are disabled.
+  divisionAttribute: string | null;
+  // Division value used for a team whose members don't all share one.
+  divisionDefault: string | null;
+  // After this ISO 8601 time, non-admin players can't change their division.
+  // null means the division never locks.
+  divisionLockTime: string | null;
 }
 
 export interface PlayerAttribute {
@@ -79,12 +87,14 @@ export interface CurrentTeam {
   name: string;
   joinToken: string | null;
   players: string[];
+  calculatedDivision: string | null;
 }
 
 export interface Team {
   id: string;
   name: string;
   players: string[];
+  calculatedDivision: string | null;
 }
 
 export interface Instance {

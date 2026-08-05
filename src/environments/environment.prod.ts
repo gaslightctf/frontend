@@ -47,5 +47,8 @@ export const environment = {
     challengeMaximumValue: 500,
     challengeMinimumValue: 100,
     challengeSolvesBeforeMinimum: 50,
+    divisionAttribute: "division",
+    divisionDefault: "open",
+    divisionLockTime: null,
   },
 };

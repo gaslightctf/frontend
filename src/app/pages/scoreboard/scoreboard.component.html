@@ -32,6 +32,36 @@
         (keyup)="searchTextChanged(searchText.value)"
       />
     </div>
+    @if (divisionAttribute) {
+      <div class="col-12 col-lg-auto mb-2">
+        <div
+          class="btn-group flex-wrap"
+          role="group"
+          aria-label="Filter by division"
+        >
+          <button
+            type="button"
+            class="btn"
+            [class.btn-primary]="selectedDivision === null"
+            [class.btn-outline-secondary]="selectedDivision !== null"
+            (click)="selectDivision(null)"
+          >
+            All
+          </button>
+          @for (division of divisionValues; track division.value) {
+            <button
+              type="button"
+              class="btn"
+              [class.btn-primary]="selectedDivision === division.value"
+              [class.btn-outline-secondary]="selectedDivision !== division.value"
+              (click)="selectDivision(division.value)"
+            >
+              {{ division.title }}
+            </button>
+          }
+        </div>
+      </div>
+    }
     <div class="col d-flex mb-4">
       <button
         class="btn btn-outline-secondary ms-auto"
@@ -61,6 +91,9 @@
           <tr>
             <th scope="col">#</th>
             <th scope="col">Name</th>
+            @if (divisionAttribute) {
+              <th scope="col">Division</th>
+            }
             <th scope="col">Score</th>
             <th scope="col">Last solve</th>
             @for (category of primaryChallengeCategories; track category) {
@@ -72,7 +105,9 @@
           @if (scoreboardRanking.length === 0) {
             <tr>
               <td
-                [attr.colspan]="4 + primaryChallengeCategories.length"
+                [attr.colspan]="
+                  (divisionAttribute ? 5 : 4) + primaryChallengeCategories.length
+                "
                 class="text-center"
               >
                 @if (searchText.value == "") {
@@ -101,6 +136,11 @@
                     [term]="searchText.value"
                 /></a>
               </td>
+              @if (divisionAttribute) {
+                <td class="text-nowrap">
+                  {{ ranking.division ? divisionTitle(ranking.division) : "—" }}
+                </td>
+              }
               <td>{{ ranking.score }}</td>
               <td class="text-wrap">
                 @if (ranking.lastSolveAt) {

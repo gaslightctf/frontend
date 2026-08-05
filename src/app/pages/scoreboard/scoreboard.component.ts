@@ -16,7 +16,7 @@ import {
   map,
   Subscription,
 } from "rxjs";
-import { Metadata } from "src/app/api-model";
+import { Metadata, PlayerAttributeValue } from "src/app/api-model";
 import {
   ChallengeDetail,
   PlayerDetail,
@@ -52,12 +52,21 @@ export class ScoreboardComponent implements OnInit, OnDestroy {
   public pageIndex = 1;
   public pageSize = 20;
 
+  // Division filter. `divisionAttribute` is null when the feature is disabled,
+  // in which case no filter control is shown. `selectedDivision` of null means
+  // "All divisions" (global ranking).
+  public divisionAttribute: string | null = null;
+  public divisionValues: readonly PlayerAttributeValue[] = [];
+  public selectedDivision: string | null = null;
+
   private scoreboardSubscription: Subscription | null = null;
   private searchTextSubscription: Subscription | null = null;
   private primaryChallengeCategoriesSubscription: Subscription | null = null;
   private areTeamsEnabledSubsciption: Subscription | null = null;
   private chartSubscription: Subscription | null = null;
+  private metadataSubscription: Subscription | null = null;
   private searchText = new BehaviorSubject<string>("");
+  private selectedDivision$ = new BehaviorSubject<string | null>(null);
 
   constructor(
     public helper: HelperService,
@@ -68,15 +77,27 @@ export class ScoreboardComponent implements OnInit, OnDestroy {
     let searchTextObservable = this.searchText
       .asObservable()
       .pipe(distinctUntilChanged());
+    let selectedDivisionObservable = this.selectedDivision$
+      .asObservable()
+      .pipe(distinctUntilChanged());
     this.scoreboardSubscription = combineLatest([
       this.dataService.getScoreboard(),
       searchTextObservable,
+      selectedDivisionObservable,
     ])
       .pipe(
         map((params) => {
-          const [scoreboard, searchText] = params;
+          const [scoreboard, searchText, division] = params;
+          // Re-rank within the selected bracket so a division view shows 1..N
+          // for that division, not a filtered slice of global ranks.
+          let rows: readonly ScoreboardRanking[] = scoreboard;
+          if (division != null) {
+            rows = scoreboard
+              .filter((s) => s.division === division)
+              .map((s, i) => Object.freeze({ ...s, rank: i + 1 }));
+          }
           var searchTextLower = searchText.toLowerCase();
-          return scoreboard.filter((s) =>
+          return rows.filter((s) =>
             s.name.toLowerCase().includes(searchTextLower),
           );
         }),
@@ -84,6 +105,16 @@ export class ScoreboardComponent implements OnInit, OnDestroy {
       .subscribe((scoreboardRanking) => {
         this.scoreboardRanking = scoreboardRanking;
       });
+    this.metadataSubscription = this.dataService.metadata.subscribe(
+      (metadata) => {
+        this.divisionAttribute = metadata.divisionAttribute;
+        this.divisionValues = metadata.divisionAttribute
+          ? (metadata.playerAttributes.find(
+              (a) => a.name === metadata.divisionAttribute,
+            )?.values ?? [])
+          : [];
+      },
+    );
     this.primaryChallengeCategoriesSubscription = this.dataService
       .getPrimaryChallengeCategories()
       .subscribe((primaryChallengeCategories) => {
@@ -99,9 +130,10 @@ export class ScoreboardComponent implements OnInit, OnDestroy {
       this.dataService.getChallengeDetails(),
       this.dataService.getPlayerDetails(),
       this.dataService.getTeamDetails(),
+      selectedDivisionObservable,
     ]).subscribe((params) => {
-      const [metadata, challenges, players, teams] = params;
-      this.updateChart(metadata, challenges, players, teams);
+      const [metadata, challenges, players, teams, division] = params;
+      this.updateChart(metadata, challenges, players, teams, division);
     });
 
     this.searchTextSubscription = searchTextObservable.subscribe((text) => {
@@ -116,6 +148,18 @@ export class ScoreboardComponent implements OnInit, OnDestroy {
     this.primaryChallengeCategoriesSubscription?.unsubscribe();
     this.areTeamsEnabledSubsciption?.unsubscribe();
     this.chartSubscription?.unsubscribe();
+    this.metadataSubscription?.unsubscribe();
+  }
+
+  selectDivision(division: string | null) {
+    this.selectedDivision = division;
+    this.selectedDivision$.next(division);
+    // Reset to the first page since the ranked list changes.
+    this.pageIndex = 1;
+  }
+
+  divisionTitle(value: string): string {
+    return this.divisionValues.find((v) => v.value === value)?.title ?? value;
   }
 
   toggleAdvancedView() {
@@ -176,11 +220,19 @@ export class ScoreboardComponent implements OnInit, OnDestroy {
     challenges: readonly ChallengeDetail[],
     players: readonly PlayerDetail[],
     teams: readonly TeamDetail[],
+    division: string | null,
   ) {
     const challengePoints: { [key: string]: number } = {};
     challenges.forEach((c) => {
       challengePoints[c.challenge.name] = c.value;
     });
+
+    // Restrict the top-10 graph to the selected bracket when a division is
+    // active, so it matches the ranked table below.
+    if (division != null) {
+      players = players.filter((p) => p.division === division);
+      teams = teams.filter((t) => t.division === division);
+    }
 
     const scores: {
       [key: string]: {

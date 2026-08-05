@@ -2,10 +2,10 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { DataService } from "src/app/services/data.service";
 import { HelperService } from "src/app/services/helper.service";
-import { map, Subscription } from "rxjs";
+import { combineLatest, map, Subscription } from "rxjs";
 import { PlayerDetail } from "src/app/model";
 import { DatePipe, KeyValuePipe } from "@angular/common";
-import { Metadata } from "src/app/api-model";
+import { Metadata, PlayerAttributeValue } from "src/app/api-model";
 
 @Component({
   selector: "app-player",
@@ -14,13 +14,16 @@ import { Metadata } from "src/app/api-model";
   imports: [RouterLink, DatePipe, KeyValuePipe],
 })
 export class PlayerDetailComponent implements OnInit, OnDestroy {
-  private playerDetailSubscription: Subscription | null = null;
+  private detailSubscription: Subscription | null = null;
   private areTeamsEnabledSubscription: Subscription | null = null;
-  private metadataSubscription: Subscription | null = null;
+  private isAdminSubscription: Subscription | null = null;
 
   playerDetail: PlayerDetail | null = null;
   areTeamsEnabled = false;
   metadata: Metadata | null = null;
+  overallRank: number | null = null;
+  divisionRank: number | null = null;
+  isAdmin = false;
 
   constructor(
     public dataService: DataService,
@@ -30,27 +33,77 @@ export class PlayerDetailComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     let playerId = this.route.params.pipe(map((params) => params["uuid"]));
-    this.playerDetailSubscription = this.dataService
-      .getPlayerDetail(playerId)
-      .subscribe((playerDetail) => {
-        this.playerDetail = playerDetail;
-      });
+    this.detailSubscription = combineLatest([
+      playerId,
+      this.dataService.getPlayerDetails(),
+      this.dataService.metadata,
+    ]).subscribe((params) => {
+      const [id, players, metadata] = params;
+      this.metadata = metadata;
+      // Rank entries the same way the scoreboard does (score, then earliest last
+      // solve, then name) so the numbers agree.
+      const ranked = [...players].sort((a, b) => this.compare(a, b));
+      const player = ranked.find((p) => p.id === id) ?? null;
+      this.playerDetail = player;
+      if (player == null) {
+        this.overallRank = null;
+        this.divisionRank = null;
+        return;
+      }
+      this.overallRank = ranked.findIndex((p) => p.id === id) + 1;
+      if (metadata.divisionAttribute && player.division != null) {
+        const inDivision = ranked.filter((p) => p.division === player.division);
+        this.divisionRank = inDivision.findIndex((p) => p.id === id) + 1;
+      } else {
+        this.divisionRank = null;
+      }
+    });
     this.areTeamsEnabledSubscription = this.dataService
       .areTeamsEnabled()
       .subscribe((areTeamsEnabled) => {
         this.areTeamsEnabled = areTeamsEnabled;
       });
-    this.metadataSubscription = this.dataService.metadata.subscribe(
-      (metadata) => {
-        this.metadata = metadata;
-      },
-    );
+    this.isAdminSubscription = this.dataService.isAdmin.subscribe((isAdmin) => {
+      this.isAdmin = isAdmin;
+    });
   }
 
   ngOnDestroy(): void {
-    this.playerDetailSubscription?.unsubscribe();
+    this.detailSubscription?.unsubscribe();
     this.areTeamsEnabledSubscription?.unsubscribe();
-    this.metadataSubscription?.unsubscribe();
+    this.isAdminSubscription?.unsubscribe();
+  }
+
+  private compare(a: PlayerDetail, b: PlayerDetail): number {
+    const scoreDiff = b.score - a.score;
+    if (scoreDiff !== 0) return scoreDiff;
+    const now = Date.now();
+    const aLast = a.solves.length
+      ? Math.max(...a.solves.map((s) => s.solvedAt.getTime()))
+      : now;
+    const bLast = b.solves.length
+      ? Math.max(...b.solves.map((s) => s.solvedAt.getTime()))
+      : now;
+    if (aLast !== bLast) return aLast - bLast;
+    return a.name.localeCompare(b.name);
+  }
+
+  get divisionValues(): readonly PlayerAttributeValue[] {
+    if (!this.metadata?.divisionAttribute) return [];
+    return (
+      this.metadata.playerAttributes.find(
+        (a) => a.name === this.metadata!.divisionAttribute,
+      )?.values ?? []
+    );
+  }
+
+  get hasDivisions(): boolean {
+    return !!this.metadata?.divisionAttribute;
+  }
+
+  divisionLabel(value: string | null): string {
+    if (!value || !this.metadata?.divisionAttribute) return "—";
+    return this.getAttributeValueTitle(this.metadata.divisionAttribute, value);
   }
 
   getAttributeTitle(name: string) {
@@ -65,6 +118,15 @@ export class PlayerDetailComponent implements OnInit, OnDestroy {
         .find((a) => a.name == name)
         ?.values.find((v) => v.value == value)?.title ?? value
     );
+  }
+
+  adminSetDivision(value: string) {
+    if (!this.playerDetail || !this.metadata?.divisionAttribute) return;
+    this.dataService
+      .adminSetPlayerAttributes(this.playerDetail.id, {
+        [this.metadata.divisionAttribute]: value,
+      })
+      .subscribe();
   }
 
   hasAttributes() {

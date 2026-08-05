@@ -92,6 +92,12 @@ export class DataService {
     .pipe(tap((s) => (this._lastSolves = s)));
   public readonly currentPlayer: Observable<CurrentPlayer | null> =
     this._currentPlayer.asObservable();
+  public readonly isAdmin: Observable<boolean> = this._currentPlayer
+    .asObservable()
+    .pipe(
+      map((p) => p?.roles?.includes("admin") ?? false),
+      distinctUntilChanged(),
+    );
   public readonly currentPlayerId: Observable<string | null> =
     this._currentPlayerId.asObservable();
   public readonly currentTeamJoinToken: Observable<string | null> =
@@ -549,6 +555,39 @@ export class DataService {
     return this.apiService.setCurrentPlayerAttributes(attrs);
   }
 
+  adminSetPlayerAttributes(id: string, attrs: Record<string, string>) {
+    return this.apiService.adminSetPlayerAttributes(id, attrs);
+  }
+
+  // Reads a player's division from their attributes, guarding on the division
+  // feature being enabled. Returns null when disabled or unset.
+  divisionOf(
+    metadata: Metadata,
+    attributes: Record<string, string>,
+  ): string | null {
+    const attr = metadata.divisionAttribute;
+    if (!attr) return null;
+    return attributes[attr] ?? null;
+  }
+
+  // Mirrors the backend CalculateDivision: the division shared by every member,
+  // otherwise the configured default. Recomputed client-side so live views stay
+  // correct without a dedicated websocket push.
+  private calculateTeamDivision(
+    metadata: Metadata,
+    members: readonly Player[],
+  ): string | null {
+    if (!metadata.divisionAttribute) return null;
+    const divisions = members.map((m) =>
+      this.divisionOf(metadata, m.attributes),
+    );
+    const first = divisions.length > 0 ? divisions[0] : null;
+    if (first != null && divisions.every((d) => d != null && d === first)) {
+      return first;
+    }
+    return metadata.divisionDefault;
+  }
+
   downloadFile(relativeUrl: string, filename: string) {
     if (this.isAuthenticated) {
       this.oidcSecurityService.getAccessToken().subscribe((token) => {
@@ -758,11 +797,14 @@ export class DataService {
     this.players,
     this.solves,
     this.getChallengeDetails(),
+    this.metadata,
   ]).pipe(
     map((params) => {
-      const [teams, players, solves, challenges] = params;
+      const [teams, players, solves, challenges, metadata] = params;
       return Object.freeze(
-        teams.map((t) => this.toTeamDetail(t, players, solves, challenges)),
+        teams.map((t) =>
+          this.toTeamDetail(t, players, solves, challenges, metadata),
+        ),
       );
     }),
     shareReplay(1),
@@ -790,11 +832,12 @@ export class DataService {
     this.players,
     this.solves,
     this.getChallengeDetails(),
+    this.metadata,
   ]).pipe(
     map((params) => {
-      const [teams, players, solves, challenges] = params;
+      const [teams, players, solves, challenges, metadata] = params;
       return players.map((p) =>
-        this.toPlayerDetail(p, players, teams, solves, challenges),
+        this.toPlayerDetail(p, players, teams, solves, challenges, metadata),
       );
     }),
     shareReplay(1),
@@ -869,6 +912,7 @@ export class DataService {
                     .reduce((a, b) => (a > b ? a : b))
                 : null,
             challengesByCategory: toRankingCategories(team.solves),
+            division: team.division,
           };
           scoreboard.push(ranking);
         }
@@ -886,6 +930,7 @@ export class DataService {
                     .reduce((a, b) => (a > b ? a : b))
                 : null,
             challengesByCategory: toRankingCategories(player.solves),
+            division: player.division,
           };
           scoreboard.push(ranking);
         }
@@ -908,6 +953,7 @@ export class DataService {
     teams: readonly Team[],
     solves: readonly Solve[],
     challenges: readonly ChallengeDetail[],
+    metadata: Metadata,
   ): PlayerDetail {
     const playerSolves = solves
       .filter((s) => s.playerId == player.id)
@@ -947,6 +993,7 @@ export class DataService {
       solves: playerSolves,
       score,
       categoryProgress,
+      division: this.divisionOf(metadata, player.attributes),
     });
   }
 
@@ -955,6 +1002,7 @@ export class DataService {
     players: readonly Player[],
     solves: readonly Solve[],
     challenges: readonly ChallengeDetail[],
+    metadata: Metadata,
   ): TeamDetail {
     const solvedChallengeNames = solves
       .filter((s) => team.players.includes(s.playerId))
@@ -982,13 +1030,15 @@ export class DataService {
         ),
       );
     }
+    const members = players.filter((p) => team.players.includes(p.id));
     return Object.freeze({
       id: team.id,
       name: team.name,
-      players: players.filter((p) => team.players.includes(p.id)),
+      players: members,
       solves: teamSolves,
       score,
       categoryProgress,
+      division: this.calculateTeamDivision(metadata, members),
     });
   }
 

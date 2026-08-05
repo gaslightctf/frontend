@@ -8,6 +8,9 @@ export interface PlayerDetail {
   score: number;
   solves: SolveDetail[];
   categoryProgress: Map<string, number>;
+  // Raw value of the division attribute, or null when divisions are disabled or
+  // the player never set one.
+  division: string | null;
 }
 
 export interface TeamDetail {
@@ -17,6 +20,9 @@ export interface TeamDetail {
   score: number;
   solves: TeamSolveDetail[];
   categoryProgress: Map<string, number>;
+  // Client-side calculated division: the value shared by all members, else the
+  // configured default; null when divisions are disabled.
+  division: string | null;
 }
 
 export interface ChallengeDetail {
@@ -61,6 +67,9 @@ export interface ScoreboardRanking {
   score: number;
   rank: number;
   challengesByCategory: ScoreboardChallengeByCategory[];
+  // Division of this entry (player's own, or team's calculated division); null
+  // when divisions are disabled.
+  division: string | null;
 }
 
 export interface ScoreboardChallengeByCategory {

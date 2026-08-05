@@ -29,6 +29,12 @@
             }
           </h3>
           <p>{{ currentAttr.attr.description }}</p>
+          @if (currentAttr.locked) {
+            <div class="alert alert-secondary" role="alert">
+              <i class="bi bi-lock"></i> This can no longer be changed. Please
+              contact the organisers if you need to update it.
+            </div>
+          }
         </div>
         @for (value of currentAttr.attr.values; track value) {
           <div class="row mb-2">
@@ -37,11 +43,13 @@
                 type="radio"
                 class="btn-check"
                 [checked]="value.value == currentAttr.selectedValue"
+                [disabled]="currentAttr.locked"
                 name="{{ currentAttr.attr.name + '_' + value.value }}"
                 autocomplete="off"
               />
               <label
                 class="btn btn-outline-secondary full-width"
+                [class.disabled]="currentAttr.locked"
                 for="{{ currentAttr.attr.name + '_' + value.value }}"
                 (click)="setPlayerAttribute(currentAttr.attr.name, value.value)"
               >

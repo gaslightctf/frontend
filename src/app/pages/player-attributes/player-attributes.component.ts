@@ -30,10 +30,21 @@ export class PlayerAttributesComponent implements OnInit, OnDestroy {
       let requiredAttributes = metadata.playerAttributes;
       let playerAttributes = new Set(Object.keys(currentPlayer.attributes));
 
+      // The division control locks for non-admin players once the configured
+      // lock time passes; disabling it here avoids a 400 round-trip.
+      const divisionLocked =
+        metadata.divisionLockTime != null &&
+        new Date() >= new Date(metadata.divisionLockTime);
+
       let currentPlayerAttributes: CurrentPlayerAttribute[] = [];
       let hasMissingRequiredAttributes = false;
       requiredAttributes.forEach((a) => {
-        const attr: CurrentPlayerAttribute = { attr: a, selectedValue: null };
+        const locked = divisionLocked && a.name === metadata.divisionAttribute;
+        const attr: CurrentPlayerAttribute = {
+          attr: a,
+          selectedValue: null,
+          locked,
+        };
         attr.attr = a;
         if (playerAttributes.has(a.name)) {
           attr.selectedValue = currentPlayer.attributes[a.name];
@@ -53,6 +64,11 @@ export class PlayerAttributesComponent implements OnInit, OnDestroy {
   }
 
   setPlayerAttribute(name: string, value: string) {
+    if (
+      this.currentPlayerAttributes.find((a) => a.attr.name === name)?.locked
+    ) {
+      return;
+    }
     let attrs: Record<string, string> = {};
     attrs[name] = value;
     this.dataService.setPlayerAttributes(attrs).subscribe((_) => {
@@ -64,4 +80,5 @@ export class PlayerAttributesComponent implements OnInit, OnDestroy {
 interface CurrentPlayerAttribute {
   attr: PlayerAttribute;
   selectedValue: string | null;
+  locked: boolean;
 }
