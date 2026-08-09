@@ -59,14 +59,24 @@
                   >nc {{ service.hostname }} {{ service.port }}</code
                 >
               }
-              @if (service.appProtocol === "ssh") {
+              @if (service.appProtocol === "ssh" && service.tls) {
                 <code
                   #c
                   class="clipboard-copy"
                   tabindex="0"
                   (click)="copyToClipboard(c)"
                   (keyup.enter)="copyToClipboard(c)"
-                  >ssh {{ service.hostname }} -p {{ service.port }}</code
+                  >ssh -o "ProxyCommand=ncat --ssl %h %p" {{ service.hostname }}@{{ service.hostname }} -p {{ service.port }}</code
+                >
+              }
+              @if (service.appProtocol === "ssh" && !service.tls) {
+                <code
+                  #d
+                  class="clipboard-copy"
+                  tabindex="0"
+                  (click)="copyToClipboard(d)"
+                  (keyup.enter)="copyToClipboard(d)"
+                  >ssh {{ service.hostname }}@{{ service.hostname }} -p {{ service.port }}</code
                 >
               }
               @if (service.name) {
