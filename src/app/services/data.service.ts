@@ -695,16 +695,6 @@ export class DataService {
     );
   }
 
-  getChallengeDifficulties(): Observable<readonly string[]> {
-    return this.challenges.pipe(
-      map((challenges) => {
-        return Object.freeze(
-          [...new Set(challenges.flatMap((c) => c.difficulty))].sort(),
-        );
-      }),
-    );
-  }
-
   getChallengeDetailsByCategory(): Observable<
     readonly ChallengeDetailCategory[]
   > {
@@ -1147,15 +1137,8 @@ export class DataService {
     // Sort by value
     let valueDifference = a.value - b.value;
     if (valueDifference == 0) {
-      // If value is equal, sort by author rated difficulty
-      let difficultyDifference =
-        this.helper.difficultyToNumber(a.challenge.difficulty) -
-        this.helper.difficultyToNumber(b.challenge.difficulty);
-      if (difficultyDifference == 0) {
-        // Fallback to sort alphabetically
-        return a.challenge.name.localeCompare(b.challenge.name);
-      }
-      return difficultyDifference;
+      // If value is equal, sort alphabetically
+      return a.challenge.name.localeCompare(b.challenge.name);
     }
     return valueDifference;
   }

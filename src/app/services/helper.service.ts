@@ -60,37 +60,6 @@ export class HelperService {
     return colorString;
   }
 
-  getDifficultyTextColorClass(difficulty: string) {
-    const colorMap = new Map();
-    colorMap.set("baby", "text-info");
-    colorMap.set("easy", "text-success");
-    colorMap.set("medium", "text-warning");
-    colorMap.set("hard", "text-danger");
-    colorMap.set("leet", "text-leet");
-    let color = colorMap.get(difficulty);
-    if (color) {
-      return color;
-    }
-    return "text-primary";
-  }
-
-  difficultyToNumber(difficulty: string): number {
-    switch (difficulty) {
-      case "baby":
-        return 0;
-      case "easy":
-        return 1;
-      case "medium":
-        return 2;
-      case "hard":
-        return 3;
-      case "leet":
-        return 5;
-      default:
-        return 6;
-    }
-  }
-
   getPrimaryCategory(categories: string[]): string {
     return categories.length == 0 ? "uncategorized" : categories[0];
   }

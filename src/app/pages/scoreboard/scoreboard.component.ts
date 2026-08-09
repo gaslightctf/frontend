@@ -194,8 +194,7 @@ export class ScoreboardComponent implements OnInit, OnDestroy {
         classes +
         " " +
         this.helper.getSolvedCategoryIconClass(primaryCategory) +
-        " " +
-        this.helper.getDifficultyTextColorClass(entry.challenge.difficulty)
+        " text-primary"
       );
     } else {
       return (

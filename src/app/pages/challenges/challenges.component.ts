@@ -7,18 +7,12 @@ import { BehaviorSubject, combineLatest, map, Subscription } from "rxjs";
 import { RouterLink } from "@angular/router";
 import { ChallengeDetailCategory } from "src/app/model";
 import { Instance } from "src/app/api-model";
-import { NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
 
 @Component({
   selector: "app-challenges",
   templateUrl: "./challenges.component.html",
   styleUrls: ["./challenges.component.less"],
-  imports: [
-    RouterLink,
-    ChallengeStatusComponent,
-    CountdownComponent,
-    NgbTooltip,
-  ],
+  imports: [RouterLink, ChallengeStatusComponent, CountdownComponent],
 })
 export class ChallengesComponent implements OnInit, OnDestroy {
   public challengeDetailCategories: readonly ChallengeDetailCategory[] = [];
@@ -29,7 +23,6 @@ export class ChallengesComponent implements OnInit, OnDestroy {
   public ctfStart: Date | null = null;
   public instance: Instance | null = null;
   public primaryChallengeCategories: readonly string[] = [];
-  public challengeDifficulties: readonly string[] = [];
 
   private challengeDetailCategoriesSubscription: Subscription | null = null;
   private ctfStartSubscription: Subscription | null = null;
@@ -37,11 +30,9 @@ export class ChallengesComponent implements OnInit, OnDestroy {
   private hasCTFEndedSubscription: Subscription | null = null;
   private areTeamsEnabledSubscription: Subscription | null = null;
   private primaryChallengeCategoriesSubscription: Subscription | null = null;
-  private challengeDifficultiesSubscription: Subscription | null = null;
   private instanceSubscription: Subscription | null = null;
 
   private filterCategory = new BehaviorSubject<string>("");
-  private filterDifficulty = new BehaviorSubject<string>("");
   private hideSolved = new BehaviorSubject<boolean>(false);
 
   constructor(
@@ -77,11 +68,6 @@ export class ChallengesComponent implements OnInit, OnDestroy {
       .subscribe((primaryChallengeCategories) => {
         this.primaryChallengeCategories = primaryChallengeCategories;
       });
-    this.challengeDifficultiesSubscription = this.dataService
-      .getChallengeDifficulties()
-      .subscribe((challengeDifficulties) => {
-        this.challengeDifficulties = challengeDifficulties;
-      });
     this.instanceSubscription = this.dataService.instance.subscribe(
       (instance) => {
         this.instance = instance;
@@ -91,7 +77,6 @@ export class ChallengesComponent implements OnInit, OnDestroy {
       this.dataService.getChallengeDetailsByCategory(),
       this.hideSolved.asObservable(),
       this.filterCategory.asObservable(),
-      this.filterDifficulty.asObservable(),
       this.dataService.currentPlayerId,
     ])
       .pipe(
@@ -100,7 +85,6 @@ export class ChallengesComponent implements OnInit, OnDestroy {
             challengeDetailCategories,
             hideSolved,
             filterCategory,
-            filterDifficulty,
             currentPlayerId,
           ] = data;
           let filteredChallengeDetailCategories = structuredClone(
@@ -113,11 +97,6 @@ export class ChallengesComponent implements OnInit, OnDestroy {
               );
           }
           for (let category of filteredChallengeDetailCategories) {
-            if (filterDifficulty != "") {
-              category.challenges = category.challenges.filter(
-                (c) => c.challenge.difficulty == filterDifficulty,
-              );
-            }
             if (currentPlayerId != null && hideSolved) {
               category.challenges = category.challenges.filter(
                 (c) => !(c.solvedByPlayer || c.solvedByTeam),
@@ -139,16 +118,11 @@ export class ChallengesComponent implements OnInit, OnDestroy {
     this.hasCTFEndedSubscription?.unsubscribe();
     this.areTeamsEnabledSubscription?.unsubscribe();
     this.primaryChallengeCategoriesSubscription?.unsubscribe();
-    this.challengeDifficultiesSubscription?.unsubscribe();
     this.instanceSubscription?.unsubscribe();
   }
 
   filterCategoryChange(value: string) {
     this.filterCategory.next(value);
-  }
-
-  filterDifficultyChange(value: string) {
-    this.filterDifficulty.next(value);
   }
 
   hideSolvedChange(event: any) {

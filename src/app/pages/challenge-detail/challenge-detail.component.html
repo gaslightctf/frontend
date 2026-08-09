@@ -17,30 +17,6 @@
               <i class="bi bi-eye-slash-fill"></i>
             </p>
           }
-          <h5>Difficulty</h5>
-          @switch (challengeDetail.challenge.difficulty) {
-            @case ("baby") {
-              <span class="badge text-bg-info me-1 mb-2">baby</span>
-            }
-            @case ("easy") {
-              <span class="badge text-bg-success me-1 mb-2">easy</span>
-            }
-            @case ("medium") {
-              <span class="badge text-bg-warning me-1 mb-2">medium</span>
-            }
-            @case ("hard") {
-              <span class="badge text-bg-danger me-1 mb-2">hard</span>
-            }
-            @case ("leet") {
-              <span class="badge text-bg-leet me-1 mb-2">leet</span>
-            }
-            @default {
-              <span class="badge text-bg-secondary me-1 mb-2">{{
-                challengeDetail.challenge.difficulty
-              }}</span>
-            }
-          }
-          <br />
           <h5>Categories</h5>
           @for (c of challengeDetail.challenge.categories; track c) {
             <span class="badge text-bg-secondary me-1 mb-2">{{ c }}</span>
