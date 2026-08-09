@@ -77,6 +77,16 @@
   @if (categoryDetail.challenges.length > 0) {
     <div class="mb-3 mt-3 justify-content-center">
       <h4>
+        @let categoryFullySolved =
+          dataService.isAuthenticated &&
+          categoryDetail.numSolved == categoryDetail.numTotal;
+        <i
+          class="bi me-2 {{
+            categoryFullySolved
+              ? helper.getSolvedCategoryIconClass(categoryDetail.category)
+              : helper.getUnsolvedCategoryIconClass(categoryDetail.category)
+          }}"
+        ></i>
         {{ categoryDetail.category }}
         @if (dataService.isAuthenticated) {
           <span class="h5">
