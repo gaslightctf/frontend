@@ -27,6 +27,39 @@
 
 <div class="card mb-4">
   <div class="card-header">
+    <h5 class="mb-0">Instructions</h5>
+  </div>
+  <div class="card-body">
+    <ol class="mb-3">
+      <li class="mb-2">
+        <strong>Sign up by logging in with Discord.</strong> Click Login in the navbar and
+        authenticate with your Discord account.
+      </li>
+      <li class="mb-2">
+        <strong>Create or join a team.</strong> You won't appear on the
+        <a routerLink="/scoreboard">scoreboard</a> until you're in a team, even if you're playing
+        solo – in that case just create a team with only yourself in it. Head to the
+        <a routerLink="/team">team page</a> to get started!
+      </li>
+      <li class="mb-2">
+        <strong>Teams are a maximum of 5 players.</strong> This isn't enforced by the platform,
+        but teams with more than 5 players will be disqualified.
+      </li>
+      <li class="mb-0">
+        <strong>Join our <a [href]="discordUrl" target="_blank" rel="noopener noreferrer">Discord server</a>!</strong>
+        Announcements will only be posted on Discord, and support is there as well.
+      </li>
+    </ol>
+    <p class="mb-0 text-body-secondary">
+      Note: everyone in your team must select the same division, otherwise your team will default
+      to the Open division. <br>
+      Please open a ticket on Discord if you have any issues/questions!
+    </p>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">
     <h5 class="mb-0">About</h5>
   </div>
   <div class="card-body">

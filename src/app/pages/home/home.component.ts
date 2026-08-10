@@ -1,18 +1,21 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
 import { DataService } from "src/app/services/data.service";
+import { RouterLink } from "@angular/router";
 import { CountdownComponent } from "src/app/widgets/countdown/countdown.component";
 import { Subscription } from "rxjs";
+import { environment } from "src/environments/environment";
 
 @Component({
   selector: "app-home",
   templateUrl: "./home.component.html",
-  imports: [CountdownComponent],
+  imports: [CountdownComponent, RouterLink],
 })
 export class HomeComponent implements OnInit, OnDestroy {
   public ctfStart: Date | null = null;
   public ctfEnd: Date | null = null;
   public hasCTFStarted = false;
   public hasCTFEnded = false;
+  public readonly discordUrl = environment.discordUrl;
 
   private subs: Subscription[] = [];
 
