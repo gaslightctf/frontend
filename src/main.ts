@@ -43,6 +43,7 @@ bootstrapApplication(AppComponent, {
         useRefreshToken: true,
         ignoreNonceAfterRefresh: true,
         renewTimeBeforeTokenExpiresInSeconds: 30,
+        maxIdTokenIatOffsetAllowedInSeconds: 600,
         secureRoutes: [`${environment.apiBaseUrl}/api`],
       },
     }),
