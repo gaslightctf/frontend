@@ -46,7 +46,7 @@ export const environment = {
     teams: true,
     challengeMaximumValue: 500,
     challengeMinimumValue: 100,
-    challengeSolvesBeforeMinimum: 250,
+    challengeSolvesBeforeMinimum: 200,
     divisionAttribute: "division",
     divisionDefault: "open",
     divisionLockTime: null,
