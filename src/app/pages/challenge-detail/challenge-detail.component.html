@@ -65,52 +65,9 @@
           </div>
           @if (challengeDetail.challenge.hasRemote) {
             <h5>Service</h5>
-          }
-          @if (challengeDetail.challenge.hasRemote) {
-            <div>
-              @if (!dataService.isAuthenticated) {
-                <div class="alert alert-warning mb-3" role="alert">
-                  You need to be logged in to start instances.
-                </div>
-              }
-              @if (instance) {
-                @if (instance.status === 0 && dataService.isAuthenticated) {
-                  <button
-                    class="btn btn-outline-success"
-                    (click)="
-                      dataService.startInstance(challengeDetail.challenge.name)
-                    "
-                  >
-                    <i class="bi bi-play"></i>Start private instance
-                  </button>
-                }
-                @if (
-                  instance.name !== challengeDetail.challenge.name &&
-                  dataService.isAuthenticated
-                ) {
-                  <div>
-                    @if (instance.status !== 0) {
-                      <div class="alert alert-primary" role="alert">
-                        You need to stop the currently running private instance
-                        to start this service.
-                      </div>
-                    }
-                    @if (instance.status === 1 || instance.status === 2) {
-                      <button
-                        class="btn btn-outline-danger"
-                        (click)="dataService.stopInstance()"
-                      >
-                        <i class="bi bi-trash"></i>Kill existing instance ({{
-                          instance.name
-                        }})
-                      </button>
-                    }
-                  </div>
-                }
-                @if (instance.name === challengeDetail.challenge.name) {
-                  <app-challenge-status></app-challenge-status>
-                }
-              }
+            <div class="alert alert-secondary mb-3" role="alert">
+              This is an archived event. Remote instances are no longer
+              available.
             </div>
           }
           @if (dataService.isAuthenticated) {

@@ -49,16 +49,6 @@
             >Challenges</a
           >
         </li>
-        @if (areTeamsEnabled) {
-          <li>
-            <a
-              routerLink="/team"
-              routerLinkActive="text-decoration-underline"
-              class="nav-link px-2"
-              >Team</a
-            >
-          </li>
-        }
         <li>
           <a
             routerLink="/activity"
@@ -76,30 +66,6 @@
           >
         </li>
       </ul>
-      @if (currentPlayer) {
-        <div ngbDropdown class="text-end" role="button">
-          <a
-            ngbDropdownToggle
-            class="d-block text-decoration-none link-secondary dropdown-toggle"
-          >
-            {{ currentPlayer.name }}
-          </a>
-          <div ngbDropdownMenu class="dropdown-menu">
-            <a ngbDropdownItem [routerLink]="['/players', currentPlayer.id]"
-              >Stats</a
-            >
-            @if (metadata != null && metadata.playerAttributes.length > 0) {
-              <a ngbDropdownItem routerLink="/player-attributes">Attributes</a>
-            }
-            <a ngbDropdownItem routerLink="/profile-settings">Settings</a>
-            <a ngbDropdownItem (click)="dataService.logout()">Logout</a>
-          </div>
-        </div>
-      } @else {
-        <div class="text-end">
-          <a (click)="dataService.login()" class="btn btn-primary">Login</a>
-        </div>
-      }
       <div ngbDropdown class="text-end ms-3">
         <a
           ngbDropdownToggle

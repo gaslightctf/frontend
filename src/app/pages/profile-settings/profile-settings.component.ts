@@ -46,7 +46,7 @@ export class ProfileSettingsComponent implements OnInit, OnDestroy {
 
   deleteAccount() {
     this.apiService.deleteCurrentPlayer().subscribe(() => {
-      this.dataService.logout(true);
+      this.dataService.logout();
       this.router.navigate(["/"]);
     });
   }

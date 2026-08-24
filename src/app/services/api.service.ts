@@ -31,10 +31,7 @@ export class ApiService {
   /* Challenge */
 
   getChallenges(): Observable<Challenge[]> {
-    return this.http.get<Challenge[]>(
-      this.baseUrl + "/api/challenges",
-      this.httpOptions,
-    );
+    return this.http.get<Challenge[]>("assets/data/challenges.json");
   }
 
   getChallenge(name: string): Observable<Challenge> {
@@ -81,19 +78,13 @@ export class ApiService {
   /* Metadata */
 
   getMetadata(): Observable<Metadata> {
-    return this.http.get<Metadata>(
-      this.baseUrl + "/api/metadata",
-      this.httpOptions,
-    );
+    return this.http.get<Metadata>("assets/data/metadata.json");
   }
 
   /* Player */
 
   getPlayers(): Observable<Player[]> {
-    return this.http.get<Player[]>(
-      this.baseUrl + "/api/players",
-      this.httpOptions,
-    );
+    return this.http.get<Player[]>("assets/data/players.json");
   }
 
   getPlayer(id: string): Observable<Player> {
@@ -154,10 +145,7 @@ export class ApiService {
   /* Solve */
 
   getSolves(): Observable<Solve[]> {
-    return this.http.get<Solve[]>(
-      this.baseUrl + "/api/solves",
-      this.httpOptions,
-    );
+    return this.http.get<Solve[]>("assets/data/solves.json");
   }
 
   addSolve(challenge: string, flag: string): Observable<void> {
@@ -175,7 +163,7 @@ export class ApiService {
   /* Team */
 
   getTeams(): Observable<Team[]> {
-    return this.http.get<Team[]>(this.baseUrl + "/api/teams", this.httpOptions);
+    return this.http.get<Team[]>("assets/data/teams.json");
   }
 
   getCurrentTeam(): Observable<CurrentTeam> {

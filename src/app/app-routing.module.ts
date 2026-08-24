@@ -11,7 +11,6 @@ import { PlayerDetailComponent } from "./pages/player-detail/player-detail.compo
 import { ChallengeDetailComponent } from "./pages/challenge-detail/challenge-detail.component";
 import { HomeComponent } from "./pages/home/home.component";
 import { TeamDetailComponent } from "./pages/team-detail/team-detail.component";
-import { TeamComponent } from "./pages/team/team.component";
 import { provideEchartsCore } from "ngx-echarts";
 import { ActivityComponent } from "./pages/activity/activity.component";
 import { combineLatest, map, Observable, of, take } from "rxjs";
@@ -154,13 +153,6 @@ const routes: Routes = [
     path: "team/:uuid",
     component: TeamDetailComponent,
     title: teamTitleResolver,
-    canActivate: [playerAttributeGuard],
-    runGuardsAndResolvers: "always",
-  },
-  {
-    path: "team",
-    component: TeamComponent,
-    title: prefixedTitleResolver("Team Settings"),
     canActivate: [playerAttributeGuard],
     runGuardsAndResolvers: "always",
   },

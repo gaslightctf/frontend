@@ -1,6 +1,5 @@
 import { Injectable } from "@angular/core";
 import { ApiService } from "./api.service";
-import { webSocket, WebSocketSubject } from "rxjs/webSocket";
 import {
   BehaviorSubject,
   Observable,
@@ -14,7 +13,6 @@ import {
   mergeMap,
   of,
   pipe,
-  retry,
   share,
   shareReplay,
   take,
@@ -31,9 +29,7 @@ import {
   Player,
   Solve,
   Team,
-  WebSocketMessage,
 } from "../api-model";
-import { LoginResponse, OidcSecurityService } from "angular-auth-oidc-client";
 import {
   ChallengeDetail,
   ChallengeDetailCategory,
@@ -54,7 +50,6 @@ import { environment } from "@env/environment";
   providedIn: "root",
 })
 export class DataService {
-  private _webSocket: WebSocketSubject<WebSocketMessage<any>> | null = null;
   private _currentPlayer = new BehaviorSubject<CurrentPlayer | null>(null);
   private _currentTeamJoinToken = new BehaviorSubject<string | null>(null);
   private _currentPlayerId = new BehaviorSubject<string | null>(null);
@@ -72,9 +67,6 @@ export class DataService {
   private _lastChallenges: readonly Challenge[] = [];
   private _lastTeams: readonly Team[] = [];
   private _lastSolves: readonly Solve[] = [];
-  private _pingSent = false;
-  private _lastCounterSent = 0;
-  private _lastCounterReceived = 0;
   private _secondTimer = timer(0, 1000).pipe(share());
 
   public readonly challenges: Observable<readonly Challenge[]> =
@@ -114,7 +106,6 @@ export class DataService {
     this._hasFreezeStarted.asObservable();
   public readonly hasFreezeEnded: Observable<boolean> =
     this._hasFreezeEnded.asObservable();
-  public readonly loginEvents: Observable<LoginResponse>;
   public isDisconnected = false;
   public isAuthenticated = false;
   private _apiError = new BehaviorSubject<HttpErrorResponse | null>(null);
@@ -125,51 +116,8 @@ export class DataService {
     private apiService: ApiService,
     private helper: HelperService,
     private router: Router,
-    private oidcSecurityService: OidcSecurityService,
   ) {
     this._metadata.next(Object.freeze(environment.metadata));
-    this.loginEvents = this.oidcSecurityService.checkAuth().pipe(share());
-    this.loginEvents.subscribe((loginResponse: LoginResponse) => {
-      const { isAuthenticated, userData, accessToken, idToken, configId } =
-        loginResponse;
-
-      if (isAuthenticated) {
-        this._currentPlayerId.next(userData["sub"]);
-        this.refreshCurrentPlayer().subscribe();
-      } else {
-        this._currentPlayerId.next(null);
-      }
-
-      this.isAuthenticated = isAuthenticated;
-
-      let redirectUrl = localStorage.getItem("urlBeforeAuthChange");
-      localStorage.setItem("urlBeforeAuthChange", "");
-
-      if (redirectUrl != null && redirectUrl != "") {
-        this.router.navigateByUrl(redirectUrl, {
-          onSameUrlNavigation: "reload",
-          skipLocationChange: false,
-        });
-      }
-    });
-
-    timer(10, 5000).subscribe((counter) => {
-      if (
-        this._pingSent &&
-        this._lastCounterSent != this._lastCounterReceived
-      ) {
-        this.isDisconnected = true;
-      } else {
-        this.isDisconnected = false;
-      }
-      this._lastCounterSent = counter;
-      let message: WebSocketMessage<number> = {
-        type: "ping",
-        message: this._lastCounterSent,
-      };
-      this._pingSent = true;
-      this._webSocket?.next(message);
-    });
 
     this.getCurrentTeamDetail()
       .pipe(
@@ -304,118 +252,6 @@ export class DataService {
     this._apiError.next(null);
   }
 
-  refreshWebSocket(accessToken: string | null) {
-    this._webSocket?.complete();
-    this._webSocket = webSocket<WebSocketMessage<any>>({
-      url: environment.wsEventsUrl,
-      openObserver: {
-        next: (_) => {
-          let message: WebSocketMessage<string | null> = {
-            type: "auth",
-            message: accessToken,
-          };
-          this._webSocket?.next(message);
-        },
-      },
-    });
-    this._webSocket.pipe(retry()).subscribe((message) => {
-      switch (message.type) {
-        case "pong":
-          {
-            this._lastCounterReceived = message.message as number;
-          }
-          break;
-        case "solve":
-          {
-            let solve = message.message as Solve;
-            let modifiedSolves = this._lastSolves.filter((_) => true);
-            modifiedSolves.push(solve);
-            this._solves.next(Object.freeze(modifiedSolves));
-          }
-          break;
-        case "team":
-          {
-            let team = message.message as Team;
-            let modifiedTeams = this._lastTeams.filter((t) => t.id != team.id);
-            modifiedTeams.push(team);
-            this._teams.next(Object.freeze(modifiedTeams));
-          }
-          break;
-        case "team-delete":
-          {
-            let teamId = message.message as string;
-            let modifiedTeams = this._lastTeams.filter((t) => t.id != teamId);
-            this._teams.next(Object.freeze(modifiedTeams));
-          }
-          break;
-        case "player":
-          {
-            let player = message.message as Player;
-            let modifiedPlayers = this._lastPlayers.filter(
-              (t) => t.id != player.id,
-            );
-            modifiedPlayers.push(player);
-            this._players.next(Object.freeze(modifiedPlayers));
-          }
-          break;
-        case "player-delete":
-          {
-            let playerId = message.message as string;
-            let modifiedPlayers = this._lastPlayers.filter(
-              (t) => t.id != playerId,
-            );
-            this._players.next(Object.freeze(modifiedPlayers));
-          }
-          break;
-        case "challenge":
-          {
-            let challenge = message.message as Challenge;
-            let modifiedChallenges = this._lastChallenges.filter(
-              (t) => t.name != challenge.name,
-            );
-            modifiedChallenges.push(challenge);
-            this._challenges.next(Object.freeze(modifiedChallenges));
-          }
-          break;
-        case "instance":
-          {
-            let instance = message.message as Instance;
-            if (instance.playerId == this._currentPlayerId.getValue()) {
-              this._instance.next(Object.freeze(instance));
-            }
-          }
-          break;
-        case "metadata":
-          {
-            let metadata = message.message as Metadata;
-            this._metadata.next(Object.freeze(metadata));
-          }
-          break;
-        case "current-player":
-          {
-            let playerId = message.message as string | null;
-            var currentPlayerId: string | null =
-              this._currentPlayerId.getValue();
-            if (playerId != currentPlayerId) {
-              this.oidcSecurityService
-                .getAccessToken()
-                .subscribe((accessToken) => {
-                  let message: WebSocketMessage<string | null> = {
-                    type: "auth",
-                    message: accessToken,
-                  };
-                  this._webSocket?.next(message);
-                });
-            }
-          }
-          break;
-        default:
-          console.warn("Unknown websocket message type: " + message.type);
-          break;
-      }
-    });
-  }
-
   private withApiErrorHandling<T>(fallback: T) {
     return pipe(
       timeout(10000),
@@ -502,18 +338,7 @@ export class DataService {
     });
   }
 
-  login() {
-    localStorage.setItem("urlBeforeAuthChange", this.router.url);
-    this.oidcSecurityService.authorize();
-  }
-
-  logout(local = false) {
-    if (local) {
-      this.oidcSecurityService.logoffLocal();
-    } else {
-      localStorage.setItem("urlBeforeAuthChange", this.router.url);
-      this.oidcSecurityService.logoff().subscribe((_) => {});
-    }
+  logout() {
     this._currentPlayer.next(null);
     this._currentPlayerId.next(null);
     this.isAuthenticated = false;
@@ -589,19 +414,10 @@ export class DataService {
   }
 
   downloadFile(relativeUrl: string, filename: string) {
-    if (this.isAuthenticated) {
-      this.oidcSecurityService.getAccessToken().subscribe((token) => {
-        const a = document.createElement("a");
-        a.href = relativeUrl + "?access_token=" + token;
-        a.download = filename;
-        a.click();
-      });
-    } else {
-      const a = document.createElement("a");
-      a.href = relativeUrl;
-      a.download = filename;
-      a.click();
-    }
+    const a = document.createElement("a");
+    a.href = relativeUrl;
+    a.download = filename;
+    a.click();
   }
 
   getCTFStart(): Observable<Date> {

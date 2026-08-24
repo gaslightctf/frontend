@@ -2,9 +2,8 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
 import { DatePipe, Location } from "@angular/common";
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { map, Subscription } from "rxjs";
-import { Instance, ProblemDetails } from "src/app/api-model";
+import { ProblemDetails } from "src/app/api-model";
 import { DataService } from "src/app/services/data.service";
-import { ChallengeStatusComponent } from "src/app/widgets/challenge-status/challenge-status.component";
 import { HttpErrorResponse } from "@angular/common/http";
 import { ChallengeDetail } from "src/app/model";
 import { NgbNavModule } from "@ng-bootstrap/ng-bootstrap";
@@ -15,18 +14,16 @@ import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
   selector: "app-challenge-detail",
   templateUrl: "./challenge-detail.component.html",
   styleUrl: "./challenge-detail.component.less",
-  imports: [ChallengeStatusComponent, DatePipe, RouterLink, NgbNavModule],
+  imports: [DatePipe, RouterLink, NgbNavModule],
 })
 export class ChallengeDetailComponent implements OnInit, OnDestroy {
   challengeDetail: ChallengeDetail | null = null;
-  instance: Instance | null = null;
   isFlagSubmitting = false;
   hasCTFEnded = false;
   areTeamsEnabled = false;
   flagErrorText: string | null = null;
 
   private challengeDetailSubscription: Subscription | null = null;
-  private instanceSubscription: Subscription | null = null;
   private hasCTFEndedSubscription: Subscription | null = null;
   private areTeamsEnabledSubscription: Subscription | null = null;
 
@@ -52,11 +49,6 @@ export class ChallengeDetailComponent implements OnInit, OnDestroy {
       .subscribe((challengeDetail) => {
         this.challengeDetail = challengeDetail;
       });
-    this.instanceSubscription = this.dataService.instance.subscribe(
-      (instance) => {
-        this.instance = instance;
-      },
-    );
     this.hasCTFEndedSubscription = this.dataService.hasCTFEnded.subscribe(
       (hasCTFEnded) => {
         this.hasCTFEnded = hasCTFEnded;
@@ -71,7 +63,6 @@ export class ChallengeDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.challengeDetailSubscription?.unsubscribe();
-    this.instanceSubscription?.unsubscribe();
     this.hasCTFEndedSubscription?.unsubscribe();
     this.areTeamsEnabledSubscription?.unsubscribe();
   }

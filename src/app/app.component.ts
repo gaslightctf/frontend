@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
 import { DataService } from "./services/data.service";
 import { RouterLink, RouterLinkActive, RouterOutlet } from "@angular/router";
 import { Subscription } from "rxjs";
-import { Metadata, Player } from "./api-model";
+import { Metadata } from "./api-model";
 import { NgbDropdownModule, NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
 
 @Component({
@@ -20,13 +20,9 @@ import { NgbDropdownModule, NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
 export class AppComponent implements OnInit, OnDestroy {
   year = new Date().getFullYear();
   theme: string | null = null;
-  currentPlayer: Player | null = null;
   metadata: Metadata | null = null;
-  areTeamsEnabled = false;
 
   private metadataSubscription: Subscription | null = null;
-  private loggedInPlayerSubscription: Subscription | null = null;
-  private areTeamsEnabledSubscription: Subscription | null = null;
 
   constructor(public dataService: DataService) {}
 
@@ -38,22 +34,10 @@ export class AppComponent implements OnInit, OnDestroy {
         this.metadata = metadata;
       },
     );
-    this.loggedInPlayerSubscription = this.dataService
-      .getLoggedInPlayer()
-      .subscribe((loggedinPlayer) => {
-        this.currentPlayer = loggedinPlayer;
-      });
-    this.areTeamsEnabledSubscription = this.dataService
-      .areTeamsEnabled()
-      .subscribe((areTeamsEnabled) => {
-        this.areTeamsEnabled = areTeamsEnabled;
-      });
   }
 
   ngOnDestroy() {
     this.metadataSubscription?.unsubscribe();
-    this.loggedInPlayerSubscription?.unsubscribe();
-    this.areTeamsEnabledSubscription?.unsubscribe();
   }
 
   getPreferredTheme() {
